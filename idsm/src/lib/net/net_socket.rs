@@ -29,7 +29,7 @@ pub fn net_socket_bind_to_device(sock : i32, ifname : &String) -> i32 {
                                    libc::SOL_SOCKET,
                                    libc::SO_BINDTODEVICE,
                                    &req as *const libc::ifreq as *const libc::c_void,
-                                   4);
+                                   std::mem::size_of_val(&req) as u32);
         }
     }
 

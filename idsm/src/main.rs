@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod lib;
 
 use crate::lib::net::net_ioctl;
@@ -29,10 +31,17 @@ fn test_set_promisc()
     println!("set {}", ret);
 }
 
+fn test_raw_sock()
+{
+    let ifname = "wlp4s0".to_string();
+    let ret;
+
+    ret = lib::raw::raw_socket::raw_socket::create(&ifname);
+    println!("raw sock create {}", ret);
+}
+
 fn main() {
     println!("Hello, world!");
 
-    test_macaddr();
-    test_ifindex();
-    test_set_promisc();
+    test_raw_sock();
 }

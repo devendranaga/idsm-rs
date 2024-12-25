@@ -13,5 +13,12 @@ impl event_desc {
     pub const IPV4_IHL_INVAL            : u32 = 0x2002;
 
     pub const TCP_SHORT_HDR_LEN         : u32 = 0x3000;
+    pub const TCP_SRC_PORT_ZERO         : u32 = 0x3001;
+    pub const TCP_DST_PORT_ZERO         : u32 = 0x3002;
+
+    pub const VLAN_ID_RESERVED          : u32 = 0x4000;
+
+    pub const ARP_INVAL_HWADDR_LEN      : u32 = 0x5000;
+    pub const ARP_INVAL_PROTOCOL_LEN    : u32 = 0x5001;
     pub const NONE                      : u32 = 0xDEADBEEF;
 }

@@ -187,7 +187,19 @@ impl tcp_hdr {
         }
 
         p.deserialize_2_bytes(&mut self.src_port);
+        if self.src_port == 0 {
+            evt_info.set(event_type::EVENT_TYPE_DENY,
+                         event_desc::TCP_SRC_PORT_ZERO);
+            return -1;
+        }
+
         p.deserialize_2_bytes(&mut self.dst_port);
+        if self.dst_port == 0 {
+            evt_info.set(event_type::EVENT_TYPE_DENY,
+                         event_desc::TCP_DST_PORT_ZERO);
+            return -1;
+        }
+
         p.deserialize_4_bytes(&mut self.seq_no);
         p.deserialize_4_bytes(&mut self.ack_no);
 

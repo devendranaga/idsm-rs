@@ -27,6 +27,17 @@ impl packet {
                                     self.off, self.buf_len);
     }
 
+    pub fn deserialize_ip6addr(&mut self, ip6addr : &mut [u8; 16]) {
+        let res : i32 = self.buf_len as i32 - (self.off + 16) as i32;
+        if res < 0 {
+            self.packet_buf_panic();
+        }
+        for i in 0..16 {
+            ip6addr[i] = self.buf[self.off + i];
+        }
+        self.off += 16;
+    }
+
     pub fn deserialize_mac(&mut self, mac : &mut [u8; 6]) {
         let res : i32 = self.buf_len as i32 - (self.off + 6) as i32;
         if res < 0 {

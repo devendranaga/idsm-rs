@@ -2,6 +2,10 @@
 #![allow(unused_variables)]
 
 mod lib;
+mod parser;
+
+use lib::protocols::packet::packet::packet;
+use parser::pkt_parser;
 
 use crate::lib::net::net_ioctl;
 
@@ -24,11 +28,16 @@ fn test_raw_sock()
     println!("raw sock create {}", ret);
     if ret == 0 {
         loop {
-            let mut rx_buf : [u8; 2048] = [0; 2048];
-            let rx_len = rx_buf.len();
+            let mut p : packet = packet::new();
+            let rx_len = p.buf_len();
 
-            ret = lib::raw::raw_socket::raw_socket::read(&mut raw_sock, &mut rx_buf, rx_len);
-            //println!("read {} bytes", ret);
+            ret = lib::raw::raw_socket::raw_socket::read(&mut raw_sock, &mut p.buf, rx_len);
+            if ret > 0 {
+                p.pkt_len = ret as usize;
+                let mut parser : pkt_parser::pkt_parser = pkt_parser::pkt_parser::new();
+
+                parser.parse(&mut p);
+            }
         }
     }
 }

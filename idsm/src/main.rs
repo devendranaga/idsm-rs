@@ -3,6 +3,7 @@
 
 mod lib;
 mod parser;
+mod events;
 
 use lib::protocols::packet::packet::packet;
 use parser::pkt_parser;

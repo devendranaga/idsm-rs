@@ -5,7 +5,7 @@ pub struct packet {
     pub buf : [u8; 2048],
     buf_len : usize,
     pub pkt_len : usize,
-    off : usize
+    pub off : usize
 }
 
 impl packet {
@@ -38,6 +38,15 @@ impl packet {
         self.off += 6;
     }
 
+    pub fn deserialize_byte(&mut self, val8 : &mut u8) {
+        let res : i32 = self.buf_len as i32 - (self.off + 1) as i32;
+        if res < 0 {
+            self.packet_buf_panic();
+        }
+        *val8 = self.buf[self.off];
+        self.off += 1;
+    }
+
     pub fn deserialize_2_bytes(&mut self, val16 : &mut u16) {
         let res : i32 = self.buf_len as i32 - (self.off + 2) as i32;
         if res < 0 {
@@ -45,5 +54,17 @@ impl packet {
         }
         *val16 = ((self.buf[self.off] as u32) << 8) as u16 | (self.buf[self.off + 1]) as u16;
         self.off += 2;
+    }
+
+    pub fn deserialize_4_bytes(&mut self, val32 : &mut u32) {
+        let res : i32 = self.buf_len as i32 - (self.off + 4) as i32;
+        if res < 0 {
+            self.packet_buf_panic();
+        }
+        *val32 = ((self.buf[self.off] as u32) << 24) |
+                 ((self.buf[self.off + 1] as u32) << 16) |
+                 ((self.buf[self.off + 2] as u32) << 8) |
+                 (self.buf[self.off + 3] as u32);
+        self.off += 4;
     }
 }

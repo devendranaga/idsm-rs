@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use crate::lib::protocols::packet::packet;
+use crate::{events::{event_desc::event_desc, event_info::event_info, event_type::event_type}, lib::protocols::packet::packet};
 
 pub struct eth_hdr {
     pub dst_mac : [u8; 6],
@@ -9,6 +9,8 @@ pub struct eth_hdr {
 }
 
 impl eth_hdr {
+    pub const ETH_HDR_LEN : u32 = 14;
+
     pub fn new() -> eth_hdr {
         let eh = eth_hdr {
             dst_mac : [0; 6],
@@ -18,10 +20,18 @@ impl eth_hdr {
         eh
     }
 
-    pub fn deserialize(&mut self, p : &mut packet::packet) {
+    pub fn deserialize(&mut self, p : &mut packet::packet, evt_info : &mut event_info) -> i32 {
+        if (p.pkt_len as u32) < eth_hdr::ETH_HDR_LEN {
+            evt_info.set(event_type::EVENT_TYPE_DENY,
+                         event_desc::ETH_SHORT_HDR_LEN);
+            return -1;
+        }
+
         p.deserialize_mac(&mut self.dst_mac);
         p.deserialize_mac(&mut self.src_mac);
         p.deserialize_2_bytes(&mut self.ethertype);
+
+        return 0;
     }
 
     pub fn print(&self) {

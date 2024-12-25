@@ -9,6 +9,8 @@ impl event_desc {
     pub const ETH_SRC_BROADCAST_MAC     : u32 = 0x1002;
 
     pub const IPV4_SHORT_HDR_LEN        : u32 = 0x2000;
+    pub const IPV4_INVAL_VERSION        : u32 = 0x2001;
+    pub const IPV4_IHL_INVAL            : u32 = 0x2002;
 
     pub const TCP_SHORT_HDR_LEN         : u32 = 0x3000;
     pub const NONE                      : u32 = 0xDEADBEEF;

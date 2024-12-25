@@ -14,7 +14,7 @@ pub struct ipv4_hdr {
     flags_mf            : u8, // 1 bit
     frag_off            : u16, // 13 bits
     ttl                 : u8, // 8 bits
-    pub protocol            : u8, // 8 bits
+    pub protocol        : u8, // 8 bits
     hdr_checksum        : u16, // 16 bits
     src_ipaddr          : u32, // 32 bits
     dst_ipaddr          : u32, // 32 bits
@@ -22,6 +22,8 @@ pub struct ipv4_hdr {
 
 impl ipv4_hdr {
     pub const IPV4_MIN_HDR_LEN : u32 = 20;
+    pub const IPV4_VERSION : u32 = 4;
+    pub const IPV4_IHL_DEFAULT : u32 = 5;
 
     pub fn new() -> ipv4_hdr {
         let hdr = ipv4_hdr {
@@ -52,7 +54,19 @@ impl ipv4_hdr {
         }
 
         self.version = (p.buf[p.off] & 0xF0) >> 4;
+        if (self.version as u32) != ipv4_hdr::IPV4_VERSION {
+            evt_info.set(event_type::EVENT_TYPE_DENY,
+                         event_desc::IPV4_INVAL_VERSION);
+            return -1;
+        }
+
         self.ihl = p.buf[p.off] & 0x0F;
+        if (self.ihl as u32) != ipv4_hdr::IPV4_IHL_DEFAULT {
+            evt_info.set(event_type::EVENT_TYPE_DENY,
+                         event_desc::IPV4_IHL_INVAL);
+            return -1;
+        }
+
         p.off += 1;
 
         self.dscp = (p.buf[p.off] & 0xFC) >> 2;

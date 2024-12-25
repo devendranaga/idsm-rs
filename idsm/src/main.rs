@@ -26,7 +26,6 @@ fn test_raw_sock()
     let mut raw_sock = lib::raw::raw_socket::raw_socket::new();
 
     ret = lib::raw::raw_socket::raw_socket::create(&mut raw_sock, &ifname);
-    println!("raw sock create {}", ret);
     if ret == 0 {
         loop {
             let mut p : packet = packet::new();

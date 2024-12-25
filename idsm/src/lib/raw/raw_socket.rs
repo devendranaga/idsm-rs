@@ -56,7 +56,6 @@ impl raw_socket {
         let ret : isize;
 
         unsafe {
-            println!("fd {}", r.fd);
             ret = libc::recv(r.fd, rx_buf.as_ptr() as *mut u8 as *mut libc::c_void, rx_len, 0);
         }
         return ret as i32;

@@ -43,7 +43,7 @@ pub fn net_socket_bind_lladdr(sock : i32, ifindex : i32, protocol : i32, family 
         let mut lladdr : libc::sockaddr_ll = MaybeUninit::zeroed().assume_init();
 
         lladdr.sll_ifindex = ifindex;
-        lladdr.sll_protocol = protocol.to_be() as u16;
+        lladdr.sll_protocol = protocol as u16;
         lladdr.sll_family = family as u16;
 
         ret = libc::bind(sock,

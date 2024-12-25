@@ -34,9 +34,8 @@ impl net_ioctl_intf {
         return ret;
     }
 
-    pub fn get_ifindex(ifname : &String) -> i32 {
+    pub fn get_ifindex(sock : i32, ifname : &String) -> i32 {
         let mut ret : i32;
-        let sock = net_socket::net_socket_create(libc::AF_INET, libc::SOCK_DGRAM, 0);
 
         unsafe {
             let mut req : libc::ifreq = MaybeUninit::zeroed().assume_init();
@@ -51,13 +50,31 @@ impl net_ioctl_intf {
             ret = req.ifr_ifru.ifru_ifindex;
         }
 
-        net_socket::net_socket_close(sock);
         return ret;
     }
 
-    pub fn set_promisc(ifname : &String) -> i32 {
+    pub fn get_ifindex_nosock(ifname : &String) -> i32 {
         let mut ret : i32;
-        let sock = net_socket::net_socket_create(libc::AF_INET, libc::SOCK_DGRAM, 0);
+        let sock : i32 = net_socket::net_socket_create(libc::AF_INET, libc::SOCK_DGRAM, 0);
+
+        unsafe {
+            let mut req : libc::ifreq = MaybeUninit::zeroed().assume_init();
+
+            c_strcpy::c_strcpy(&mut req.ifr_name, ifname.as_str());
+            ret = libc::ioctl(sock, libc::SIOCGIFINDEX, &req);
+            if ret < 0 {
+                net_socket::net_socket_close(sock);
+                return -1;
+            }
+
+            ret = req.ifr_ifru.ifru_ifindex;
+        }
+
+        return ret;
+    }
+
+    pub fn set_promisc(sock : i32, ifname : &String) -> i32 {
+        let mut ret : i32;
 
         unsafe {
             let mut req : libc::ifreq =  MaybeUninit::zeroed().assume_init();
@@ -65,19 +82,16 @@ impl net_ioctl_intf {
             c_strcpy::c_strcpy(&mut req.ifr_name, ifname.as_str());
             ret = libc::ioctl(sock, libc::SIOCGIFFLAGS, &req);
             if ret < 0 {
-                net_socket::net_socket_close(sock);
                 return -1;
             }
 
             req.ifr_ifru.ifru_flags |= libc::IFF_PROMISC as i16;
             ret = libc::ioctl(sock, libc::SIOCSIFFLAGS, &req);
             if ret < 0 {
-                net_socket::net_socket_close(sock);
                 return -1;
             }
         }
 
-        net_socket::net_socket_close(sock);
         return ret;
     }
 }

@@ -12,25 +12,32 @@ pub struct raw_socket {
 
 impl raw_socket {
 
-    pub fn create(ifname : &String) -> i32 {
-        let mut ret;
-        let mut r = raw_socket {
+    pub fn new() -> raw_socket {
+        let r = raw_socket {
             fd : -1,
-            ifname : String::from(ifname),
+            ifname : "".to_string(),
             ifindex : -1
         };
 
-        r.fd = net_socket::net_socket_create(libc::AF_PACKET, libc::SOCK_RAW, libc::ETH_P_ALL.to_be());
+        return r;
+    }
+
+    pub fn create(r : &mut raw_socket, ifname : &String) -> i32 {
+        let mut ret;
+
+        // create raw socket
+        r.fd = net_socket::net_socket_create(libc::AF_PACKET, libc::SOCK_RAW, (libc::ETH_P_ALL as u16).to_be() as i32);
         if r.fd < 0 {
             return -1;
         }
 
-        ret = net_ioctl::net_ioctl_intf::set_promisc(ifname);
+        // set promiscous mode
+        ret = net_ioctl::net_ioctl_intf::set_promisc(r.fd, ifname);
         if ret < 0 {
             return -1;
         }
 
-        r.ifindex = net_ioctl::net_ioctl_intf::get_ifindex(ifname);
+        r.ifindex = net_ioctl::net_ioctl_intf::get_ifindex(r.fd, ifname);
         if ret < 0 {
             return -1;
         }
@@ -40,8 +47,18 @@ impl raw_socket {
             return -1;
         }
 
-        ret = net_socket::net_socket_bind_lladdr(r.fd, r.ifindex, libc::ETH_P_ALL, libc::AF_PACKET);
+        ret = net_socket::net_socket_bind_lladdr(r.fd, r.ifindex, (libc::ETH_P_ALL as u16).to_be() as i32, libc::AF_PACKET);
 
         return ret;
+    }
+
+    pub fn read(r : &mut raw_socket, rx_buf : &mut [u8], rx_len : usize) -> i32 {
+        let ret : isize;
+
+        unsafe {
+            println!("fd {}", r.fd);
+            ret = libc::recv(r.fd, rx_buf.as_ptr() as *mut u8 as *mut libc::c_void, rx_len, 0);
+        }
+        return ret as i32;
     }
 }

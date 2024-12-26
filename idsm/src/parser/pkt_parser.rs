@@ -121,11 +121,16 @@ impl pkt_parser {
         if ret < 0 {
             return -1;
         }
+        self.ethertype = self.eh.ethertype;
 
         match self.eh.ethertype {
             Ethertypes::ARP             => ret = self.ah.deserialize(p, evt_info),
             Ethertypes::IEEE_8021Q      => ret = self.parse_vlan(p, evt_info),
             _                           => ret = -1,
+        }
+
+        if Ethertypes::has_l3(self.eh.ethertype) {
+            ret = 0;
         }
 
         return ret;

@@ -4,6 +4,8 @@ use crate::lib::protocols::packet::packet::packet;
 use crate::parser::pkt_parser;
 use crate::config;
 
+use super::cmd_args::idsm_cmd_args;
+
 pub struct idsm_context {
     config_data : config::config_parser::idsm_config
 }
@@ -17,10 +19,15 @@ impl idsm_context {
     }
 
     pub fn init(&mut self) -> i32 {
-        let config_file = "./config/firewall_config.json".to_string();
         let mut ret : i32 = 0;
+        let mut cmd_args = idsm_cmd_args::new();
 
-        ret = self.config_data.parse(&config_file);
+        ret = cmd_args.parse();
+        if ret < 0 {
+            return -1;
+        }
+
+        ret = self.config_data.parse(&cmd_args.config_file);
         if ret < 0 {
             return -1;
         }

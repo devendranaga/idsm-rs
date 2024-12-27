@@ -1,13 +1,19 @@
+// @brief - parse command line arguments
+// @copyright - Devendra Naga 2024-present All rights reserved.
 use std::env;
 
 use getopts::Options;
 
-
+// defines idsm command line arguments
 pub struct idsm_cmd_args {
+    // configuration file
+    // the -f of command line argument sets this
     pub config_file : String,
 }
 
 impl idsm_cmd_args {
+    // zero initialize the structure
+    // returns cmd_args of type idsm_cmd_args
     pub fn new() -> idsm_cmd_args {
         let cmd_args = idsm_cmd_args {
             config_file : "".to_string()
@@ -15,31 +21,44 @@ impl idsm_cmd_args {
         cmd_args
     }
 
+    // displays the usage
+    // @param [in] self - struct idsm_cmd_args
+    // @param [in] progname - program name
     fn usage(&mut self, progname : &String) {
         println!("{} \n\
                  \t -f / --filename <firewall config file>\n \
                  \t -h / -help <show this help>", progname);
     }
 
+    // parse command line arguments
+    // @param [in] self - struct idsm_cmd_args
+    // @returns 0 on success -1 on failure
     pub fn parse(&mut self) -> i32 {
         let args : Vec <String> = env::args().collect();
         let progname = args[0].clone();
-
         let mut options = Options::new();
+
         options.optopt("f", "filename", "config filename", "");
         options.optflag("h", "help", "shows the help");
 
         let matches = match options.parse(&args[1..]) {
+            // if ok, return matched argument list in m
             Ok(m) => {m}
-            Err(f) => { panic!("{}", f.to_string())}
+
+            // on error, panic and fail argument parsing
+            Err(f) => {panic!("{}", f.to_string())}
         };
 
+        // if -h is set, show usage
         if matches.opt_present("h") {
             self.usage(&progname);
             return -1;
         }
 
-        self.config_file = matches.opt_str("f").unwrap();
+        // if -f is set, copy config filename
+        if matches.opt_present("f") {
+            self.config_file = matches.opt_str("f").unwrap();
+        }
 
         return 0;
     }

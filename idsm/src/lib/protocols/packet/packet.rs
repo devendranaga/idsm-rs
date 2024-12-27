@@ -78,4 +78,20 @@ impl packet {
                  (self.buf[self.off + 3] as u32);
         self.off += 4;
     }
+
+    pub fn hexdump(&mut self) {
+        println!("packet: len {}", self.pkt_len);
+        for i in 0..self.pkt_len {
+            if i != 0 {
+                if i % 8 == 0 {
+                    print!("    ");
+                }
+                if i % 16 == 0 {
+                    println!("");
+                }
+            }
+            print!("{:02X} ", self.buf[i]);
+        }
+        println!("");
+    }
 }

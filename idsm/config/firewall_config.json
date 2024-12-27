@@ -1,4 +1,8 @@
 {
-    "ifname": "enxa0cec8fd23ff"
+    "ifname": "enxa0cec8fd23ff",
+    "pcap": {
+        "enable": true,
+        "file_prefix": "pcap_"
+    }
 }
 

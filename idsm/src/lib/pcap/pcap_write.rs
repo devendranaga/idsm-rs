@@ -3,41 +3,41 @@
 use crate::lib::{fileio::fileio, time_linux::timestamp};
 
 struct pcap_header {
-    magic_number : u32,
-    version_major : u16,
-    version_minor : u16,
-    thiszone : i32,
-    sigfigs : u32,
-    snaplen : u32,
-    network : u32
+    magic_number            : u32,
+    version_major           : u16,
+    version_minor           : u16,
+    thiszone                : i32,
+    sigfigs                 : u32,
+    snaplen                 : u32,
+    network                 : u32
 }
 
 fn serialize_4_bytes(val32 : u32, buf : &mut [u8], off : &mut usize) {
-    buf[*off] = ((val32 & 0xFF000000) >> 24) as u8;
-    buf[*off + 1] = ((val32 & 0x00FF0000) >> 16) as u8;
-    buf[*off + 2] = ((val32 & 0x0000FF00) >> 8) as u8;
-    buf[*off + 3] = ((val32 & 0x000000FF)) as u8;
+    buf[*off]           = ((val32 & 0xFF000000) >> 24) as u8;
+    buf[*off + 1]       = ((val32 & 0x00FF0000) >> 16) as u8;
+    buf[*off + 2]       = ((val32 & 0x0000FF00) >> 8) as u8;
+    buf[*off + 3]       = ((val32 & 0x000000FF)) as u8;
 
-    *off += 4;
+    *off                += 4;
 }
 
 fn serialize_2_bytes(val16 : u16, buf : &mut [u8], off : &mut usize) {
-    buf[*off] = ((val16 & 0xFF00) >> 8) as u8;
-    buf[*off + 1] = ((val16 & 0x00FF)) as u8;
+    buf[*off]           = ((val16 & 0xFF00) >> 8) as u8;
+    buf[*off + 1]       = ((val16 & 0x00FF)) as u8;
 
-    *off += 2;
+    *off                += 2;
 }
 
 impl pcap_header {
     pub fn new() -> pcap_header {
         let pcap_hdr = pcap_header {
-            magic_number : 0xA1B2C3D4,
-            version_major : 2,
-            version_minor : 4,
-            thiszone : 0,
-            sigfigs : 0,
-            snaplen : 65535,
-            network : 1
+            magic_number            : 0xA1B2C3D4,
+            version_major           : 2,
+            version_minor           : 4,
+            thiszone                : 0,
+            sigfigs                 : 0,
+            snaplen                 : 65535,
+            network                 : 1
         };
         pcap_hdr
     }
@@ -54,19 +54,19 @@ impl pcap_header {
 }
 
 struct pcap_record {
-    ts_sec : u32,
-    ts_usec : u32,
-    incl_len : u32,
-    orig_len : u32
+    ts_sec          : u32,
+    ts_usec         : u32,
+    incl_len        : u32,
+    orig_len        : u32
 }
 
 impl pcap_record {
     pub fn new() -> pcap_record {
         let pcap_rec = pcap_record {
-            ts_sec : 0,
-            ts_usec : 0,
-            incl_len : 0,
-            orig_len : 0
+            ts_sec          : 0,
+            ts_usec         : 0,
+            incl_len        : 0,
+            orig_len        : 0
         };
         pcap_rec
     }

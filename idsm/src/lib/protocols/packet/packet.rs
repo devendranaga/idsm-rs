@@ -18,6 +18,16 @@ impl packet {
         };
         p
     }
+
+    // @brief - check if remaining length from the offset is in bounds
+    //          within the header length of the packet.
+    // @param [in] self - packet.
+    // @param [in] hdr_len - header length.
+    // @return true if within bounds false if not within bounds.
+    pub fn remaining_len_in_bounds(&self, hdr_len : u32) -> bool {
+        return (self.pkt_len as u32 - self.off as u32) >= hdr_len;
+    }
+
     pub fn buf_len(&self) -> usize {
         return self.buf_len;
     }

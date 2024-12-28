@@ -27,12 +27,36 @@ impl idsm_context {
         context
     }
 
+    fn init_pcap_context(&mut self) -> i32 {
+        let mut pcap_filename = String::new();
+        let mut ret = -1;
+
+        // create pcap file if enabled
+        if self.config_data.pcap_config.enable {
+            let file_prefix = ".pcap".to_string();
+
+            ret = gmtime_filename(&self.config_data.pcap_config.file_prefix,
+                                &file_prefix, &mut pcap_filename);
+            if ret < 0 {
+                println!("cannot create a filename with current time");
+                return -1;
+            }
+
+            ret = self.pcap_write.create(&pcap_filename);
+            if ret < 0 {
+                println!("idsm: failed to create pcap file");
+                return -1;
+            }
+        }
+
+        return ret;
+    }
+
     // @brief - initialize the idsm context
     // @param [in] self - idsm context
     pub fn init(&mut self) -> i32 {
-        let mut ret : i32 = 0;
+        let mut ret : i32;
         let mut cmd_args = idsm_cmd_args::new();
-        let mut pcap_filename = String::new();
 
         // parse command line arguments
         ret = cmd_args.parse();
@@ -48,16 +72,10 @@ impl idsm_context {
             return -1;
         }
 
-        // create pcap file if enabled
-        if self.config_data.pcap_config.enable {
-            let file_prefix = ".pcap".to_string();
-            ret = gmtime_filename(&self.config_data.pcap_config.file_prefix,
-                                  &file_prefix, &mut pcap_filename);
-            ret = self.pcap_write.create(&pcap_filename);
-            if ret < 0 {
-                println!("idsm: failed to create pcap file");
-                return -1;
-            }
+        ret = self.init_pcap_context();
+        if ret < 0 {
+            println!("idsm: cannot create pcap context");
+            return -1;
         }
 
         println!("idsm: init ok");

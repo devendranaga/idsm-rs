@@ -1,3 +1,5 @@
+// @brief - parses the packet
+// @copyright - Devendra Naga 2024-present All rights reserved
 #![allow(non_camel_case_types)]
 
 use crate::{
@@ -14,6 +16,9 @@ use crate::{
     }
 };
 
+// @brief - defines a group of protocol headers and some
+//          information about a single packet that entered
+//          on the interface.
 pub struct pkt_parser {
     eh          : eth::eth_hdr,
     ah          : arp::arp_hdr,
@@ -29,6 +34,9 @@ pub struct pkt_parser {
 }
 
 impl pkt_parser {
+    // @brief - zero initialize the packet parser
+    //
+    // @return returns zero initialized packet parser structure
     pub fn new() -> pkt_parser {
         let parser = pkt_parser {
             eh          : eth::eth_hdr::new(),
@@ -46,8 +54,15 @@ impl pkt_parser {
         parser
     }
 
+    // @brief - parse TCP frame
+    //
+    // @param [in] self - pkt_parser
+    // @param [in] p - packet
+    // @param [in] evt_info - event info
+    //
+    // @return 0 on success -1 on failure
     fn parse_tcp(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
-        let mut ret : i32 = -1;
+        let mut ret : i32;
 
         ret = self.tcp_h.deserialize(p, evt_info);
         if ret < 0 {
@@ -59,10 +74,18 @@ impl pkt_parser {
         return ret;
     }
 
-    fn match_l4(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
+    // @brief - match an L4 frame
+    //
+    // @param [in] self - pkt_parser
+    // @param [in] p - packet
+    // @param [in] evt_info - event info
+    // @param [in] protocol - Layer 4 protocol
+    //
+    // @return 0 on success -1 on failure
+    fn match_l4(&mut self, p : &mut packet, evt_info : &mut event_info, protocol : u8) -> i32 {
         let mut ret : i32 = -1;
 
-        match self.ipv4_h.protocol {
+        match protocol {
             ProtocolTypes::TCP => ret = self.parse_tcp(p, evt_info),
             _ => ret = -1,
         }
@@ -70,8 +93,15 @@ impl pkt_parser {
         return ret;
     }
 
+    // @brief - parse an IPv4 packet
+    //
+    // @param [in] self - pkt_parser
+    // @param [in] p - packet
+    // @param [in] evt_info - event info
+    //
+    // @return 0 on success -1 on failure
     fn parse_ipv4(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
-        let mut ret : i32 = -1;
+        let mut ret : i32;
 
         ret = self.ipv4_h.deserialize(p, evt_info);
         if ret < 0 {
@@ -80,13 +110,20 @@ impl pkt_parser {
 
         self.has_ipv4_h = true;
 
-        ret = self.match_l4(p, evt_info);
+        ret = self.match_l4(p, evt_info, self.ipv4_h.protocol);
 
         return ret;
     }
 
+    // @brief - parse an IPv6 packet
+    //
+    // @param [in] self - pkt_parser
+    // @param [in] p - packet
+    // @param [in] evt_info - event info
+    //
+    // @return 0 on success -1 on failure
     fn parse_ipv6(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
-        let mut ret : i32 = -1;
+        let mut ret : i32;
 
         ret = self.ipv6_h.deserialize(p, evt_info);
         if ret < 0 {
@@ -95,13 +132,20 @@ impl pkt_parser {
 
         self.has_ipv6_h = true;
 
-        ret = self.match_l4(p, evt_info);
+        ret = self.match_l4(p, evt_info, self.ipv6_h.next_hdr);
 
         return ret;
     }
 
+    // @brief - parse a VLAN packet
+    //
+    // @param [in] self - pkt_parser
+    // @param [in] p - packet
+    // @param [in] evt_info - event info
+    //
+    // @return 0 on success -1 on failure
     fn parse_vlan(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
-        let mut ret : i32 = -1;
+        let ret : i32;
 
         ret = self.vh.deserialize(p, evt_info);
         if ret < 0 {
@@ -114,8 +158,15 @@ impl pkt_parser {
         return ret;
     }
 
+    // @brief - parse a Layer 2 frame
+    //
+    // @param [in] self - pkt_parser
+    // @param [in] p - packet
+    // @param [in] evt_info - event info
+    //
+    // @return 0 on success -1 on failure
     fn parse_l2(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
-        let mut ret : i32 = -1;
+        let mut ret : i32;
 
         ret = self.eh.deserialize(p, evt_info);
         if ret < 0 {
@@ -136,6 +187,12 @@ impl pkt_parser {
         return ret;
     }
 
+    // @brief - parse an incoming frame
+    //
+    // @param [in] self - pkt_parser
+    // @param [in] p - packet
+    //
+    // @return 0 on success -1 on failure
     pub fn parse(&mut self, p : &mut packet) -> i32 {
         let mut evt_info : event_info = event_info::new();
         let mut ret : i32;

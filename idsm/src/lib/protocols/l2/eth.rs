@@ -69,12 +69,19 @@ impl eth_hdr {
         return 0;
     }
 
+    // @brief - serialize ethernet header
+    //
+    // @param [in] self - ethernet header
+    // @param [in] p - packet
     pub fn serialize(&mut self, p : &mut packet::packet) {
         p.serialize_mac(&mut self.dst_mac);
         p.serialize_mac(&mut self.src_mac);
         p.serialize_2_bytes(&mut self.ethertype);
     }
 
+    // @brief - print ethernet header
+    //
+    // @param [in] self - ethernet header
     pub fn print(&self) {
         println!("eth_hdr:");
         println!("\t dst_mac: {:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}",

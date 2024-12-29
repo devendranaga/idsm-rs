@@ -14,9 +14,7 @@ impl idsm_stats_mgr {
         stats_mgr
     }
 
-    pub fn get(&mut self) -> &stats::idsm_stats {
-        return &self.stats;
-    }
+    pub fn get(&mut self) -> &stats::idsm_stats { return &self.stats; }
 
     pub fn inc_rx(&mut self) { self.stats.n_rx += 1; }
     pub fn inc_eth_rx(&mut self) { self.stats.n_eth_rx += 1; }

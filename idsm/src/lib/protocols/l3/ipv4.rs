@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use crate::{events::{event_desc::event_desc, event_info::event_info, event_type::event_type}, lib::protocols::packet::packet::packet};
+use crate::{events::{event_desc::event_desc, event_mgr::event_mgr, event_type::event_type}, lib::protocols::packet::packet::packet};
 
 pub struct ipv4_hdr {
     version             : u8, // 4 bits
@@ -46,23 +46,23 @@ impl ipv4_hdr {
         hdr
     }
 
-    pub fn deserialize(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
+    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
         if ((p.pkt_len - p.off) as u32) < ipv4_hdr::IPV4_MIN_HDR_LEN {
-            evt_info.set(event_type::EVENT_TYPE_DENY,
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::IPV4_SHORT_HDR_LEN);
             return -1;
         }
 
         self.version = (p.buf[p.off] & 0xF0) >> 4;
         if (self.version as u32) != ipv4_hdr::IPV4_VERSION {
-            evt_info.set(event_type::EVENT_TYPE_DENY,
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::IPV4_INVAL_VERSION);
             return -1;
         }
 
         self.ihl = p.buf[p.off] & 0x0F;
         if (self.ihl as u32) != ipv4_hdr::IPV4_IHL_DEFAULT {
-            evt_info.set(event_type::EVENT_TYPE_DENY,
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::IPV4_IHL_INVAL);
             return -1;
         }

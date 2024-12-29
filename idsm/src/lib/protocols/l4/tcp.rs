@@ -1,7 +1,12 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
-use crate::{events::{event_desc::event_desc, event_info::event_info, event_type::event_type}, lib::protocols::packet::packet::packet};
+use crate::{
+    events::{
+        event_desc::event_desc, event_mgr::event_mgr, event_type::event_type
+    },
+    lib::protocols::packet::packet::packet
+};
 
 pub struct tcp_flags {
     pub res             : u8, // 3 bits
@@ -33,7 +38,7 @@ impl tcp_flags {
         flags
     }
 
-    pub fn deserialize(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
+    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
         self.res = p.buf[p.off] & 0x0E;
         self.accurate_ecn = !!(p.buf[p.off] & 0x01);
         p.off += 1;
@@ -82,7 +87,7 @@ impl tcp_opt_timestamp {
         opt_timestamp
     }
 
-    pub fn deserialize(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32  {
+    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32  {
         p.deserialize_byte(&mut self.len);
         p.deserialize_4_bytes(&mut self.ts_val);
         p.deserialize_4_bytes(&mut self.ts_echo_reply);
@@ -115,7 +120,7 @@ impl tcp_opt {
         opts
     }
 
-    pub fn deserialize(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
+    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
         let mut ret : i32 = -1;
         let mut opt : u8;
 
@@ -126,7 +131,7 @@ impl tcp_opt {
                 p.off += 1;
                 self.available_options |= tcp_opt::OPT_NO_OP as u32;
             } else if opt == tcp_opt::OPT_TIMESTAMP {
-                ret = self.opt_timestamp.deserialize(p, evt_info);
+                ret = self.opt_timestamp.deserialize(p, evt_mgr);
                 if ret != 0 {
                     return -1;
                 }
@@ -179,23 +184,23 @@ impl tcp_hdr {
         tcp_h
     }
 
-    pub fn deserialize(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
+    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
         if ((p.pkt_len - p.off) as u32) < tcp_hdr::TCP_MIN_HDR_LEN {
-            evt_info.set(event_type::EVENT_TYPE_DENY,
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::TCP_SHORT_HDR_LEN);
             return -1;
         }
 
         p.deserialize_2_bytes(&mut self.src_port);
         if self.src_port == 0 {
-            evt_info.set(event_type::EVENT_TYPE_DENY,
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::TCP_SRC_PORT_ZERO);
             return -1;
         }
 
         p.deserialize_2_bytes(&mut self.dst_port);
         if self.dst_port == 0 {
-            evt_info.set(event_type::EVENT_TYPE_DENY,
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::TCP_DST_PORT_ZERO);
             return -1;
         }
@@ -205,13 +210,13 @@ impl tcp_hdr {
 
         self.hdr_len = (p.buf[p.off] & 0xF0) >> 4;
 
-        self.flags.deserialize(p, evt_info);
+        self.flags.deserialize(p, evt_mgr);
 
         p.deserialize_2_bytes(&mut self.window);
         p.deserialize_2_bytes(&mut self.hdr_checksum);
         p.deserialize_2_bytes(&mut self.urg_ptr);
 
-        self.options.deserialize(p, evt_info);
+        self.options.deserialize(p, evt_mgr);
 
         return 0;
     }

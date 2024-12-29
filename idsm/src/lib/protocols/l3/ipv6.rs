@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use crate::{events::{event_desc::event_desc, event_info::event_info, event_type::event_type}, lib::protocols::packet::packet::packet};
+use crate::{events::{event_desc::event_desc, event_mgr::event_mgr, event_type::event_type}, lib::protocols::packet::packet::packet};
 
 pub struct ipv6_hdr {
     version             : u8, // 4 bits
@@ -31,10 +31,10 @@ impl ipv6_hdr {
         ipv6_h
     }
 
-    pub fn deserialize(&mut self, p : &mut packet, evt_info : &mut event_info) -> i32 {
+    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
         // drop if packet is too short
         if !p.remaining_len_in_bounds(ipv6_hdr::IPV6_MIN_HDR_LEN) {
-            evt_info.set(event_type::EVENT_TYPE_DENY,
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::IPV6_SHORT_HDR_LEN);
             return -1;
         }
@@ -42,7 +42,7 @@ impl ipv6_hdr {
         // drop if version is invalid
         self.version = (p.buf[p.off] & 0xF0) >> 4;
         if self.version != ipv6_hdr::IPV6_VERSION as u8 {
-            evt_info.set(event_type::EVENT_TYPE_DENY,
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::IPV6_INVAL_VERSION);
             return -1;
         }

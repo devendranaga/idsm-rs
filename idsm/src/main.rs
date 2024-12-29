@@ -7,6 +7,7 @@ mod parser;
 mod events;
 mod config;
 mod core;
+mod stats;
 
 fn main() {
     let mut ctx : core::idsm_context::idsm_context = core::idsm_context::idsm_context::new();

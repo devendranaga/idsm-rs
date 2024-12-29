@@ -2,6 +2,8 @@
 // @copyright - Devendra Naga 2024-present All rights reserved
 #![allow(non_camel_case_types)]
 
+use crate::core::debug::is_debug_level_protocol;
+use crate::events::event_mgr;
 use crate::lib::pcap::{self};
 use crate::lib::protocols::packet::packet::packet;
 use crate::lib::time_linux::gmtime::gmtime_filename;
@@ -12,7 +14,9 @@ use super::cmd_args::idsm_cmd_args;
 
 // @brief - defines idsm context
 pub struct idsm_context {
+    cmd_args                : idsm_cmd_args,
     config_data             : config::config_parser::idsm_config,
+    evt_mgr                 : event_mgr::event_mgr,
     pcap_write              : pcap::pcap_write::pcap_writer
 }
 
@@ -21,7 +25,9 @@ impl idsm_context {
     // @return idsm context
     pub fn new() -> idsm_context {
         let context = idsm_context {
+            cmd_args                : idsm_cmd_args::new(),
             config_data             : config::config_parser::idsm_config::new(),
+            evt_mgr                 : event_mgr::event_mgr::new(),
             pcap_write              : pcap::pcap_write::pcap_writer::new(),
         };
         context
@@ -56,17 +62,16 @@ impl idsm_context {
     // @param [in] self - idsm context
     pub fn init(&mut self) -> i32 {
         let mut ret : i32;
-        let mut cmd_args = idsm_cmd_args::new();
 
         // parse command line arguments
-        ret = cmd_args.parse();
+        ret = self.cmd_args.parse();
         if ret < 0 {
             println!("idsm: failed to parse command line args");
             return -1;
         }
 
         // parse config file
-        ret = self.config_data.parse(&cmd_args.config_file);
+        ret = self.config_data.parse(&self.cmd_args.config_file);
         if ret < 0 {
             println!("idsm: failed to parse config data");
             return -1;
@@ -101,6 +106,7 @@ impl idsm_context {
         loop {
             let mut p : packet = packet::new();
             let rx_len = p.buf_len();
+            let debug_protocols = is_debug_level_protocol(self.cmd_args.debug);
     
             // read from the raw socket
             ret = lib::raw::raw_socket::raw_socket::read(&mut raw_sock, &mut p.buf, rx_len);
@@ -109,7 +115,7 @@ impl idsm_context {
                 let mut parser : pkt_parser::pkt_parser = pkt_parser::pkt_parser::new();
     
                 //p.hexdump();
-                parser.parse(&mut p);
+                parser.parse(&mut p, &mut self.evt_mgr, debug_protocols);
                 self.pcap_write.write(&p.buf, p.pkt_len as u32);
             }
         }

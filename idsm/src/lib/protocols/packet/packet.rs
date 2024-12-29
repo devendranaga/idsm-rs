@@ -37,6 +37,14 @@ impl packet {
                                     self.off, self.buf_len);
     }
 
+    pub fn serialize_ip6addr(&mut self, ip6addr : &mut [u8; 16]) {
+        for i in 0..16 {
+            self.buf[self.off + i] = ip6addr[i];
+        }
+
+        self.off += 16;
+    }
+
     pub fn deserialize_ip6addr(&mut self, ip6addr : &mut [u8; 16]) {
         let res : i32 = self.buf_len as i32 - (self.off + 16) as i32;
         if res < 0 {
@@ -45,7 +53,16 @@ impl packet {
         for i in 0..16 {
             ip6addr[i] = self.buf[self.off + i];
         }
+
         self.off += 16;
+    }
+
+    pub fn serialize_mac(&mut self, mac : &mut [u8; 6]) {
+        for i in 0..6 {
+            self.buf[self.off + i] = mac[i];
+        }
+
+        self.off += 6;
     }
 
     pub fn deserialize_mac(&mut self, mac : &mut [u8; 6]) {
@@ -56,7 +73,14 @@ impl packet {
         for i in 0..6 {
             mac[i] = self.buf[self.off + i];
         }
+
         self.off += 6;
+    }
+
+    pub fn serialize_byte(&mut self, val8 : &mut u8) {
+        self.buf[self.off] = *val8;
+
+        self.off += 1;
     }
 
     pub fn deserialize_byte(&mut self, val8 : &mut u8) {
@@ -65,7 +89,15 @@ impl packet {
             self.packet_buf_panic();
         }
         *val8 = self.buf[self.off];
+
         self.off += 1;
+    }
+
+    pub fn serialize_2_bytes(&mut self, val16: &mut u16) {
+        self.buf[self.off] = ((*val16 & 0xFF00) >> 8) as u8;
+        self.buf[self.off + 1] = ((*val16 & 0x00FF)) as u8;
+
+        self.off += 2;
     }
 
     pub fn deserialize_2_bytes(&mut self, val16 : &mut u16) {
@@ -74,7 +106,17 @@ impl packet {
             self.packet_buf_panic();
         }
         *val16 = ((self.buf[self.off] as u32) << 8) as u16 | (self.buf[self.off + 1]) as u16;
+
         self.off += 2;
+    }
+
+    pub fn serialize_4_bytes(&mut self, val32 : &mut u32) {
+        self.buf[self.off] = ((*val32 & 0xFF000000) >> 24) as u8;
+        self.buf[self.off + 1] = ((*val32 & 0x00FF0000) >> 16) as u8;
+        self.buf[self.off + 2] = ((*val32 & 0x0000FF00) >> 8) as u8;
+        self.buf[self.off + 3] = ((*val32 & 0x000000FF)) as u8;
+
+        self.off += 4;
     }
 
     pub fn deserialize_4_bytes(&mut self, val32 : &mut u32) {
@@ -86,6 +128,7 @@ impl packet {
                  ((self.buf[self.off + 1] as u32) << 16) |
                  ((self.buf[self.off + 2] as u32) << 8) |
                  (self.buf[self.off + 3] as u32);
+
         self.off += 4;
     }
 
@@ -103,5 +146,22 @@ impl packet {
             print!("{:02X} ", self.buf[i]);
         }
         println!("");
+    }
+
+    pub fn print_ipv4(name : &str, addr : u32) {
+        println!("{}: {}.{}.{}.{}",
+                name,
+                (addr & 0xFF000000) >> 24,
+                (addr & 0x00FF0000) >> 16,
+                (addr & 0x0000FF00) >> 8,
+                (addr & 0x000000FF));
+    }
+
+    pub fn print_macaddr(name : &str, mac_addr : &[u8]) {
+        println!("{}: {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+                name,
+                mac_addr[0], mac_addr[1],
+                mac_addr[2], mac_addr[3],
+                mac_addr[4], mac_addr[5]);
     }
 }

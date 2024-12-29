@@ -9,6 +9,7 @@ use crate::lib::protocols::packet::packet::packet;
 use crate::lib::time_linux::gmtime::gmtime_filename;
 use crate::parser::pkt_parser;
 use crate::config;
+use crate::stats::stats_mgr;
 
 use super::cmd_args::idsm_cmd_args;
 
@@ -17,6 +18,7 @@ pub struct idsm_context {
     cmd_args                : idsm_cmd_args,
     config_data             : config::config_parser::idsm_config,
     evt_mgr                 : event_mgr::event_mgr,
+    stats_mgr               : stats_mgr::idsm_stats_mgr,
     pcap_write              : pcap::pcap_write::pcap_writer
 }
 
@@ -28,6 +30,7 @@ impl idsm_context {
             cmd_args                : idsm_cmd_args::new(),
             config_data             : config::config_parser::idsm_config::new(),
             evt_mgr                 : event_mgr::event_mgr::new(),
+            stats_mgr               : stats_mgr::idsm_stats_mgr::new(),
             pcap_write              : pcap::pcap_write::pcap_writer::new(),
         };
         context
@@ -113,9 +116,11 @@ impl idsm_context {
             if ret > 0 {
                 p.pkt_len = ret as usize;
                 let mut parser : pkt_parser::pkt_parser = pkt_parser::pkt_parser::new();
+
+                self.stats_mgr.inc_rx();
     
                 //p.hexdump();
-                parser.parse(&mut p, &mut self.evt_mgr, debug_protocols);
+                parser.parse(&mut p, &mut self.evt_mgr, &mut self.stats_mgr, debug_protocols);
                 self.pcap_write.write(&p.buf, p.pkt_len as u32);
             }
         }

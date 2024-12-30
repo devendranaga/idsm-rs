@@ -5,3 +5,5 @@ pub(crate) mod protocols;
 pub(crate) mod pcap;
 pub(crate) mod fileio;
 pub(crate) mod time_linux;
+pub(crate) mod socket_linux;
+pub(crate) mod select_linux;

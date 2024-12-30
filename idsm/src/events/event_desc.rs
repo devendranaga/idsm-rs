@@ -28,6 +28,7 @@ impl event_desc {
     // list of events related to ARP
     pub const ARP_INVAL_HWADDR_LEN      : u32 = 0x5000;
     pub const ARP_INVAL_PROTOCOL_LEN    : u32 = 0x5001;
+    pub const ARP_OP_INVALID            : u32 = 0x5002;
 
     pub const IPV6_SHORT_HDR_LEN        : u32 = 0x6000;
     pub const IPV6_INVAL_VERSION        : u32 = 0x6001;

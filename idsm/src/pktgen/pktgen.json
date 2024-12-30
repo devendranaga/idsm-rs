@@ -1,0 +1,9 @@
+{
+    "eth": {
+        "dst_mac": "00:11:12:13:11:12:13",
+        "src_mac": "00:01:02:03:01:02:03",
+        "ethertype": "0x0800",
+        "replay_intvl_us": 1000,
+        "repeat": true
+    }
+}

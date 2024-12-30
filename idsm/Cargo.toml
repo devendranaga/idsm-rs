@@ -14,4 +14,4 @@ path = "src/main.rs"
 
 [[bin]]
 name = "packet_gen"
-path = "src/packet_gen.rs"
+path = "src/packet_gen_main.rs"

@@ -39,6 +39,23 @@ impl icmp6_dest_unreach_codes {
     pub const ERR_IN_SRC_ROUTING_HDR : u8 = 7;
 }
 
+#[non_exhaustive]
+pub struct icmp6_time_exceeded_codes;
+
+impl icmp6_time_exceeded_codes {
+    pub const HOP_LIM_EXCEEDED_IN_TRANSIT : u8 = 0;
+    pub const FRAG_REASSEMBLY_TIME_EXCEEDED : u8 = 1;
+}
+
+#[non_exhaustive]
+pub struct icmp6_parameter_problem;
+
+impl icmp6_parameter_problem {
+    pub const ERRONEOUS_HDR_FIELD_ENCOUNTERED : u32 = 0;
+    pub const UNRECOG_NH_TYPE : u32 = 1;
+    pub const UNRECOG_IPV6_OPT : u32 = 2;
+}
+
 pub struct icmp6_hdr {
     icmp6_type : u8,
     code : u8,
@@ -71,6 +88,7 @@ impl icmp6_hdr {
         p.deserialize_2_bytes(&mut self.checksum);
 
         if debug { self.print(); }
+
         return 0;
     }
 

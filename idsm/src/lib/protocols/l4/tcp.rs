@@ -1,3 +1,5 @@
+// @brief - implements TCP serialize and deserializer
+// @copyright - 2024-present Devendra Naga All rights reserved
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
@@ -8,6 +10,7 @@ use crate::{
     lib::protocols::packet::packet::packet
 };
 
+// @brief - defines TCP flags
 pub struct tcp_flags {
     pub res             : u8, // 3 bits
     pub accurate_ecn    : u8, // 1 bit
@@ -22,6 +25,10 @@ pub struct tcp_flags {
 }
 
 impl tcp_flags {
+    // @brief - get a cleared TCP flags structure
+    //
+    // @return returns cleared TCP flags structure
+    #[inline(always)]
     pub fn new() -> tcp_flags {
         let flags = tcp_flags {
             res             : 0,
@@ -38,21 +45,45 @@ impl tcp_flags {
         flags
     }
 
+    // @brief - deserialize TCP flags
+    //
+    // @param [inout] self - TCP flags
+    // @param [inout] p - packet
+    // @param [out] evt_mgr - event mgr
+    //
+    // @return 0 on success -1 on failure
     pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
         self.res = p.buf[p.off] & 0x0E;
-        self.accurate_ecn = !!(p.buf[p.off] & 0x01);
+        self.accurate_ecn = if (p.buf[p.off] & 0x01) == 0x01 { 1 } else { 0 };
         p.off += 1;
 
-        self.cwr = !!(p.buf[p.off] & 0x80);
-        self.ece = !!(p.buf[p.off] & 0x40);
-        self.urg = !!(p.buf[p.off] & 0x20);
-        self.ack = !!(p.buf[p.off] & 0x10);
-        self.psh = !!(p.buf[p.off] & 0x08);
-        self.rst = !!(p.buf[p.off] & 0x04);
-        self.syn = !!(p.buf[p.off] & 0x02);
-        self.fin = !!(p.buf[p.off] & 0x01);
+        self.cwr = if (p.buf[p.off] & 0x80) == 0x80 { 1 } else { 0 };
+        self.ece = if (p.buf[p.off] & 0x40) == 0x40 { 1 } else { 0 };
+        self.urg = if (p.buf[p.off] & 0x20) == 0x20 { 1 } else { 0 };
+        self.ack = if (p.buf[p.off] & 0x10) == 0x10 { 1 } else { 0 };
+        self.psh = if (p.buf[p.off] & 0x08) == 0x08 { 1 } else { 0 };
+        self.rst = if (p.buf[p.off] & 0x04) == 0x04 { 1 } else { 0 };
+        self.syn = if (p.buf[p.off] & 0x02) == 0x02 { 1 } else { 0 };
+        self.fin = if (p.buf[p.off] & 0x01) == 0x01 { 1 } else { 0 };
         p.off += 1;
 
+        // raise event if all flags are set
+        if (self.res == 1) &&
+           (self.accurate_ecn == 1) &&
+           (self.cwr == 1) &&
+           (self.ece == 1) &&
+           (self.urg == 1) &&
+           (self.ack == 1) &&
+           (self.psh == 1) &&
+           (self.rst == 1) &&
+           (self.syn == 1) &&
+           (self.fin == 1) {
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
+                                    event_desc::TCP_FLAGS_ALL_SET);
+            return -1;
+        }
+
+        // raise event if no flags are set
         if (self.res == 0) &&
            (self.accurate_ecn == 0) &&
            (self.cwr == 0) &&
@@ -69,6 +100,7 @@ impl tcp_flags {
             return -1;
         }
 
+        // raise event if both syn and fin are set
         if (self.syn != 0) && (self.fin != 0) {
             evt_mgr.insert_evt_info(
                                     event_type::EVENT_TYPE_DENY,
@@ -79,6 +111,9 @@ impl tcp_flags {
         return 0;
     }
 
+    // @brief - print TCP flags
+    //
+    // @param [in] self - TCP flags
     pub fn print(&self) {
         println!("\t flags: ");
         println!("\t\t res: {}", self.res);
@@ -94,6 +129,7 @@ impl tcp_flags {
     }
 }
 
+// @brief - TCP option timestamp structure
 pub struct tcp_opt_timestamp {
     len                 : u8, // 1 byte
     ts_val              : u32, // 4 bytes
@@ -101,6 +137,12 @@ pub struct tcp_opt_timestamp {
 }
 
 impl tcp_opt_timestamp {
+    pub const TCP_TIMESTAMP_OPT_LEN : u8 = 10;
+
+    // @brief - get a cleared TCP timestamp opt structure
+    //
+    // @return returns cleared TCP timestamp opt structure
+    #[inline(always)]
     pub fn new() -> tcp_opt_timestamp {
         let opt_timestamp = tcp_opt_timestamp {
             len                 : 0,
@@ -110,14 +152,27 @@ impl tcp_opt_timestamp {
         opt_timestamp
     }
 
+    // @brief - deserialize TCP timestamp
+    //
+    // @param [out] self - this struct
+    // @param [inout] p - packet
+    // @param [out] evt_mgr - event mgr
     pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32  {
         p.deserialize_byte(&mut self.len);
+        if self.len != tcp_opt_timestamp::TCP_TIMESTAMP_OPT_LEN {
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
+                                    event_desc::TCP_TIMESTAMP_OPT_LEN_INVAL);
+            return -1;
+        }
         p.deserialize_4_bytes(&mut self.ts_val);
         p.deserialize_4_bytes(&mut self.ts_echo_reply);
 
         return 0;
     }
 
+    // @brief - print TCP timestamp
+    //
+    // @param [in] self - TCP timestamp
     pub fn print(&self) {
         println!("\t\t opt_timestamp: ");
         println!("\t\t\t len: {}", self.len);
@@ -126,6 +181,7 @@ impl tcp_opt_timestamp {
     }
 }
 
+// @brief - defines TCP options
 pub struct tcp_opt {
     pub available_options   : u32,
     pub opt_timestamp       : tcp_opt_timestamp
@@ -135,6 +191,10 @@ impl tcp_opt {
     pub const OPT_NO_OP     : u8 = 1;
     pub const OPT_TIMESTAMP : u8 = 8;
 
+    // @brief - clears TCP options
+    //
+    // @return returns cleared TCP options
+    #[inline(always)]
     pub fn new() -> tcp_opt {
         let opts = tcp_opt {
             available_options : 0,
@@ -143,10 +203,16 @@ impl tcp_opt {
         opts
     }
 
+    // @brief - deserialize TCP options
+    //
+    // @param [out] self - this struct
+    // @param [inout] p - packet
+    // @param [out] evt_mgr - event mgr
     pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
-        let mut ret : i32 = -1;
+        let mut ret : i32 = 0;
         let mut opt : u8;
 
+        /* skip if no options present. */
         while p.off < p.pkt_len {
             opt = p.buf[p.off];
 
@@ -172,6 +238,9 @@ impl tcp_opt {
         return ret;
     }
 
+    // @brief - print TCP options
+    //
+    // @param [in] self - this struct
     pub fn print(&self) {
         if (self.available_options & tcp_opt::OPT_TIMESTAMP as u32) == 0 {
             self.opt_timestamp.print();
@@ -179,6 +248,7 @@ impl tcp_opt {
     }
 }
 
+// @brief - defines TCP header
 pub struct tcp_hdr {
     src_port            : u16, // 16 bits
     dst_port            : u16, // 16 bits
@@ -195,6 +265,10 @@ pub struct tcp_hdr {
 impl tcp_hdr {
     pub const TCP_MIN_HDR_LEN : u32 = 20;
 
+    // @brier - zero initialize TCP header
+    //
+    // @return returns zero initialized TCP header
+    #[inline(always)]
     pub fn new() -> tcp_hdr {
         let tcp_h = tcp_hdr {
             src_port            : 0,
@@ -211,7 +285,16 @@ impl tcp_hdr {
         tcp_h
     }
 
+    // @brief - deserialize TCP header
+    //
+    // @param [inout] self - this struct
+    // @param [inout] p - packet
+    // @param [out] evt_mgr - event mgr
+    // @param [in] debug - debug frame
+    //
+    // @return 0 on success -1 on failure
     pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, debug : bool) -> i32 {
+        // check if the packet within the TCP header length
         if ((p.pkt_len - p.off) as u32) < tcp_hdr::TCP_MIN_HDR_LEN {
             evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::TCP_SHORT_HDR_LEN);
@@ -237,19 +320,28 @@ impl tcp_hdr {
 
         self.hdr_len = (p.buf[p.off] & 0xF0) >> 4;
 
-        self.flags.deserialize(p, evt_mgr);
+        let mut ret = self.flags.deserialize(p, evt_mgr);
+        if ret < 0 {
+            return -1;
+        }
 
         p.deserialize_2_bytes(&mut self.window);
         p.deserialize_2_bytes(&mut self.hdr_checksum);
         p.deserialize_2_bytes(&mut self.urg_ptr);
 
-        self.options.deserialize(p, evt_mgr);
+        ret = self.options.deserialize(p, evt_mgr);
+        if ret < 0 {
+            return -1;
+        }
 
         if debug { self.print(); }
 
         return 0;
     }
 
+    // @brief - print TCP header
+    //
+    // @param [in] self - this structure
     pub fn print(&self) {
         println!("tcp_hdr: ");
         println!("\t src_port : {}", self.src_port);

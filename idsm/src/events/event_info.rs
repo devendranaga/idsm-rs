@@ -1,5 +1,6 @@
 // @brief - implements event info description
 // @copyright - Devendra Naga 2024-present All rights reserved.
+#![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
 use crate::lib::time_linux::{self, timestamp::get_wallclock};

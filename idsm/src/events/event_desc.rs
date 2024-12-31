@@ -17,6 +17,7 @@ impl event_desc {
     pub const IPV4_SHORT_HDR_LEN        : u32 = 0x2000;
     pub const IPV4_INVAL_VERSION        : u32 = 0x2001;
     pub const IPV4_IHL_INVAL            : u32 = 0x2002;
+    pub const IPV4_RESERVED_SET         : u32 = 0x2003;
 
     // list of events related to TCP
     pub const TCP_SHORT_HDR_LEN         : u32 = 0x3000;
@@ -36,6 +37,8 @@ impl event_desc {
 
     pub const IPV6_SHORT_HDR_LEN        : u32 = 0x6000;
     pub const IPV6_INVAL_VERSION        : u32 = 0x6001;
+    pub const IPV6_SRC_ADDR_INVALID     : u32 = 0x6002;
+    pub const IPV6_DST_ADDR_INVALID     : u32 = 0x6003;
 
     pub const ICMP6_SHORT_HDR_LEN       : u32 = 0x7000;
     pub const NONE                      : u32 = 0xDEADBEEF;

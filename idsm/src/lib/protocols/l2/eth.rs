@@ -3,9 +3,19 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
-use crate::{events::{event_desc::event_desc, event_mgr::event_mgr, event_type::event_type}, lib::{c_lib, protocols::packet::packet}};
+use crate::{
+    events::{
+        event_desc::event_desc,
+        event_mgr::event_mgr,
+        event_type::event_type
+    },
+    lib::{
+        c_lib,
+        protocols::packet::packet
+    }
+};
 
-use self::c_lib::memcmp::c_memcmp;
+use self::c_lib::c_memcmp::c_memcmp;
 
 // @brief - defines Ethernet header
 pub struct eth_hdr {

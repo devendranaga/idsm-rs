@@ -1,7 +1,18 @@
+// @brief - implements ipv4 serialize and deserialization
+// @copyright - 2024-present Devendra Naga All rights reserved
+#![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
-use crate::{events::{event_desc::event_desc, event_mgr::event_mgr, event_type::event_type}, lib::protocols::packet::packet::packet};
+use crate::{
+    events::{
+        event_desc::event_desc,
+        event_mgr::event_mgr,
+        event_type::event_type
+    },
+    lib::protocols::packet::packet::packet
+};
 
+// @brief - implements ipv4 header
 pub struct ipv4_hdr {
     version             : u8, // 4 bits
     ihl                 : u8, // 4 bits
@@ -21,10 +32,14 @@ pub struct ipv4_hdr {
 }
 
 impl ipv4_hdr {
-    pub const IPV4_MIN_HDR_LEN : u32 = 20;
-    pub const IPV4_VERSION : u32 = 4;
-    pub const IPV4_IHL_DEFAULT : u32 = 5;
+    pub const IPV4_MIN_HDR_LEN          : u32 = 20;
+    pub const IPV4_VERSION              : u32 = 4;
+    pub const IPV4_IHL_DEFAULT          : u32 = 5;
 
+    // @brief - return an instance of ipv4_hdr
+    //
+    // @return return an instance of ipv4_hdr
+    #[inline(always)]
     pub fn new() -> ipv4_hdr {
         let hdr = ipv4_hdr {
             version             : 0,
@@ -46,7 +61,15 @@ impl ipv4_hdr {
         hdr
     }
 
-    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
+    // @brief - deserialize ipv4 header
+    //
+    // @param [inout] self - ipv4 header
+    // @param [inout] p - packet
+    // @param [inout] evt_mgr - event manager
+    // @param [in] debug - debug
+    //
+    // @return 0 on success -1 on failure.
+    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, debug : bool) -> i32 {
         if ((p.pkt_len - p.off) as u32) < ipv4_hdr::IPV4_MIN_HDR_LEN {
             evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::IPV4_SHORT_HDR_LEN);
@@ -76,9 +99,15 @@ impl ipv4_hdr {
         p.deserialize_2_bytes(&mut self.total_len);
         p.deserialize_2_bytes(&mut self.id);
 
-        self.flags_res = !!(p.buf[p.off] & 0x80);
-        self.flags_df = !!(p.buf[p.off] & 0x40);
-        self.flags_mf = !!(p.buf[p.off] & 0x20);
+        self.flags_res = if (p.buf[p.off] & 0x80) == 0x80 { 1 } else { 0 };
+        if self.flags_res != 0 {
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
+                                    event_desc::IPV4_RESERVED_SET);
+            return -1;
+        }
+
+        self.flags_df = if (p.buf[p.off] & 0x40) == 0x40 { 1 } else { 0 };
+        self.flags_mf = if (p.buf[p.off] & 0x20) == 0x20 { 1 } else { 0 };
         self.frag_off = (((p.buf[p.off] & 0x1F) as u32) << 8) as u16 | (p.buf[p.off + 1]) as u16;
         p.off += 2;
 
@@ -88,18 +117,30 @@ impl ipv4_hdr {
         p.deserialize_4_bytes(&mut self.src_ipaddr);
         p.deserialize_4_bytes(&mut self.dst_ipaddr);
 
+        if debug { self.print(); }
+
         return 0;
     }
 
+    // @brief - print ipv4 header
+    //
+    // @param [in] self - ipv4 header
     pub fn print(&self) {
         println!("ipv4_hdr: ");
         println!("\t version: {}", self.version);
         println!("\t ihl: {}", self.ihl);
+        println!("\t dscp: {}", self.dscp);
+        println!("\t ech: {}", self.ecn);
+        println!("\t total_len: {}", self.total_len);
+        println!("\t id: 0x{:02X}", self.id);
+        println!("\t flags: ");
+        println!("\t\t reserved: {}", self.flags_res);
+        println!("\t\t df: {}", self.flags_df);
+        println!("\t\t mf: {}", self.flags_mf);
+        println!("\t ttl: {}", self.ttl);
         println!("\t protocol: {}", self.protocol);
-        println!("\t src_ipaddr: {}.{}.{}.{}",
-                                (self.src_ipaddr & 0xFF000000) >> 24,
-                                (self.src_ipaddr & 0x00FF0000) >> 16,
-                                (self.src_ipaddr & 0x0000FF00) >> 8,
-                                (self.src_ipaddr & 0x000000FF));
+        println!("\t hdr_checksum: 0x{:02X}", self.hdr_checksum);
+        packet::print_ipv4("src_ipaddr", self.src_ipaddr);
+        packet::print_ipv4("dst_ipaddr", self.dst_ipaddr);
     }
 }

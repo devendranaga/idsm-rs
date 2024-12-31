@@ -30,6 +30,7 @@ impl arp_operation_types {
     // @brief - check if the ARP op is valid
     //
     // @return true on success false on failure
+    #[inline(always)]
     pub fn valid_arp_op(op : u16) -> bool {
         if (op == arp_operation_types::REQUEST) ||
            (op == arp_operation_types::REPLY) ||
@@ -59,6 +60,7 @@ impl arp_hdr {
     pub const ARP_HW_ADDR_LEN       : u32 = 6;
     pub const ARP_PROTOCOL_ADDR_LEN : u32 = 4;
 
+    #[inline(always)]
     pub fn new() -> arp_hdr {
         let arp_h = arp_hdr {
             hdr_type            : 0,

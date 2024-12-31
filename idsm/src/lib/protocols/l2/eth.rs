@@ -1,5 +1,6 @@
 // @brief - implements Ethernet serialize deserialize.
 // @copyright - 2024-present Devendra Naga All rights reserved.
+#![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
 use crate::{events::{event_desc::event_desc, event_mgr::event_mgr, event_type::event_type}, lib::{c_lib, protocols::packet::packet}};
@@ -8,9 +9,9 @@ use self::c_lib::memcmp::c_memcmp;
 
 // @brief - defines Ethernet header
 pub struct eth_hdr {
-    pub dst_mac : [u8; 6],
-    pub src_mac : [u8; 6],
-    pub ethertype : u16
+    pub dst_mac     : [u8; 6],
+    pub src_mac     : [u8; 6],
+    pub ethertype   : u16
 }
 
 impl eth_hdr {
@@ -19,11 +20,12 @@ impl eth_hdr {
     // @brier - zero initialize Ethernet header
     //
     // @return zero initialized Ethernet header
+    #[inline(always)]
     pub fn new() -> eth_hdr {
         let eh = eth_hdr {
-            dst_mac : [0; 6],
-            src_mac : [0; 6],
-            ethertype : 0
+            dst_mac     : [0; 6],
+            src_mac     : [0; 6],
+            ethertype   : 0
         };
         eh
     }
@@ -52,20 +54,21 @@ impl eth_hdr {
         p.deserialize_2_bytes(&mut self.ethertype);
 
         // zero source mac.. raise event
-        if c_memcmp(&self.src_mac, &z_mac, 6) == false {
+        if c_memcmp(&self.src_mac, &z_mac, 6) == true {
             evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                                     event_desc::ETH_SRC_ZERO_MAC);
             return -1;
         }
 
         // broadcast source mac.. raise event
-        if c_memcmp(&self.src_mac, &b_mac, 6) == false {
+        if c_memcmp(&self.src_mac, &b_mac, 6) == true {
             evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                                     event_desc::ETH_SRC_BROADCAST_MAC);
             return -1;
         }
 
         if debug { self.print(); }
+
         return 0;
     }
 

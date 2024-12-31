@@ -53,6 +53,29 @@ impl tcp_flags {
         self.fin = !!(p.buf[p.off] & 0x01);
         p.off += 1;
 
+        if (self.res == 0) &&
+           (self.accurate_ecn == 0) &&
+           (self.cwr == 0) &&
+           (self.ece == 0) &&
+           (self.urg == 0) &&
+           (self.ack == 0) &&
+           (self.psh == 0) &&
+           (self.rst == 0) &&
+           (self.syn == 0) &&
+           (self.fin == 0) {
+            evt_mgr.insert_evt_info(
+                                    event_type::EVENT_TYPE_DENY,
+                                    event_desc::TCP_FLAGS_ALL_ZERO);
+            return -1;
+        }
+
+        if (self.syn != 0) && (self.fin != 0) {
+            evt_mgr.insert_evt_info(
+                                    event_type::EVENT_TYPE_DENY,
+                                    event_desc::TCP_FLAGS_SYN_FIN_SET);
+            return -1;
+        }
+
         return 0;
     }
 
@@ -137,6 +160,10 @@ impl tcp_opt {
                 }
                 self.available_options |= tcp_opt::OPT_TIMESTAMP as u32;
             } else {
+                // unknown option
+                evt_mgr.insert_evt_info(
+                                        event_type::EVENT_TYPE_DENY,
+                                        event_desc::TCP_UNKNOWN_OPT);
                 ret = -1;
                 break;
             }
@@ -184,7 +211,7 @@ impl tcp_hdr {
         tcp_h
     }
 
-    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
+    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, debug : bool) -> i32 {
         if ((p.pkt_len - p.off) as u32) < tcp_hdr::TCP_MIN_HDR_LEN {
             evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
                          event_desc::TCP_SHORT_HDR_LEN);
@@ -218,6 +245,8 @@ impl tcp_hdr {
 
         self.options.deserialize(p, evt_mgr);
 
+        if debug { self.print(); }
+
         return 0;
     }
 
@@ -231,7 +260,7 @@ impl tcp_hdr {
         self.flags.print();
 
         println!("\t window : {}", self.window);
-        println!("\t hdr_checksum : {}", self.hdr_checksum);
+        println!("\t hdr_checksum : 0x{:02X}", self.hdr_checksum);
         println!("\t urg_ptr: {}", self.urg_ptr);
         self.options.print();
     }

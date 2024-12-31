@@ -11,7 +11,7 @@ use crate::{
         l3::{
             ipv4, ipv6, protocol_types::ProtocolTypes
         },
-        l4::tcp,
+        l4::{icmp6, tcp},
         packet::packet::packet
     }, stats::stats_mgr
 };
@@ -26,10 +26,12 @@ pub struct pkt_parser {
     ipv4_h      : ipv4::ipv4_hdr,
     ipv6_h      : ipv6::ipv6_hdr,
     tcp_h       : tcp::tcp_hdr,
+    icmp6_h     : icmp6::icmp6_hdr,
     has_vlan_h  : bool,
     has_ipv4_h  : bool,
     has_ipv6_h  : bool,
     has_tcp_h   : bool,
+    has_icmp6_h : bool,
     ethertype   : u16,
 }
 
@@ -45,10 +47,12 @@ impl pkt_parser {
             ipv4_h      : ipv4::ipv4_hdr::new(),
             ipv6_h      : ipv6::ipv6_hdr::new(),
             tcp_h       : tcp::tcp_hdr::new(),
+            icmp6_h     : icmp6::icmp6_hdr::new(),
             has_vlan_h  : false,
             has_ipv4_h  : false,
             has_ipv6_h  : false,
             has_tcp_h   : false,
+            has_icmp6_h : false,
             ethertype   : 0
         };
         parser
@@ -61,10 +65,10 @@ impl pkt_parser {
     // @param [in] evt_info - event info
     //
     // @return 0 on success -1 on failure
-    fn parse_tcp(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, stats_mgr : &mut stats_mgr::idsm_stats_mgr) -> i32 {
+    fn parse_tcp(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, stats_mgr : &mut stats_mgr::idsm_stats_mgr, debug : bool) -> i32 {
         let ret : i32;
 
-        ret = self.tcp_h.deserialize(p, evt_mgr);
+        ret = self.tcp_h.deserialize(p, evt_mgr, debug);
         if ret < 0 {
             return -1;
         }
@@ -83,11 +87,17 @@ impl pkt_parser {
     // @param [in] protocol - Layer 4 protocol
     //
     // @return 0 on success -1 on failure
-    fn match_l4(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, protocol : u8, stats_mgr : &mut stats_mgr::idsm_stats_mgr) -> i32 {
-        let mut ret : i32 = -1;
+    fn match_l4(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, protocol : u8, stats_mgr : &mut stats_mgr::idsm_stats_mgr, debug : bool) -> i32 {
+        let ret : i32;
 
         match protocol {
-            ProtocolTypes::TCP => ret = self.parse_tcp(p, evt_mgr, stats_mgr),
+            ProtocolTypes::TCP => ret = self.parse_tcp(p, evt_mgr, stats_mgr, debug),
+            ProtocolTypes::ICMP6 => {
+                ret = self.icmp6_h.deserialize(p, evt_mgr, debug);
+                if ret == 0 {
+                    self.has_icmp6_h = true;
+                }
+            }
             _ => ret = -1,
         }
 
@@ -101,10 +111,10 @@ impl pkt_parser {
     // @param [in] evt_info - event info
     //
     // @return 0 on success -1 on failure
-    fn parse_ipv4(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, stats_mgr : &mut stats_mgr::idsm_stats_mgr) -> i32 {
+    fn parse_ipv4(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, stats_mgr : &mut stats_mgr::idsm_stats_mgr, debug : bool) -> i32 {
         let mut ret : i32;
 
-        ret = self.ipv4_h.deserialize(p, evt_mgr);
+        ret = self.ipv4_h.deserialize(p, evt_mgr, debug);
         if ret < 0 {
             return -1;
         }
@@ -112,7 +122,7 @@ impl pkt_parser {
         stats_mgr.inc_ipv4_rx();
         self.has_ipv4_h = true;
 
-        ret = self.match_l4(p, evt_mgr, self.ipv4_h.protocol, stats_mgr);
+        ret = self.match_l4(p, evt_mgr, self.ipv4_h.protocol, stats_mgr, debug);
 
         return ret;
     }
@@ -124,10 +134,10 @@ impl pkt_parser {
     // @param [in] evt_info - event info
     //
     // @return 0 on success -1 on failure
-    fn parse_ipv6(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, stats_mgr : &mut stats_mgr::idsm_stats_mgr) -> i32 {
+    fn parse_ipv6(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, stats_mgr : &mut stats_mgr::idsm_stats_mgr, debug : bool) -> i32 {
         let mut ret : i32;
 
-        ret = self.ipv6_h.deserialize(p, evt_mgr);
+        ret = self.ipv6_h.deserialize(p, evt_mgr, debug);
         if ret < 0 {
             return -1;
         }
@@ -135,7 +145,7 @@ impl pkt_parser {
         stats_mgr.inc_ipv6_rx();
         self.has_ipv6_h = true; 
 
-        ret = self.match_l4(p, evt_mgr, self.ipv6_h.next_hdr, stats_mgr);
+        ret = self.match_l4(p, evt_mgr, self.ipv6_h.next_hdr, stats_mgr, debug);
 
         return ret;
     }
@@ -147,10 +157,10 @@ impl pkt_parser {
     // @param [in] evt_info - event info
     //
     // @return 0 on success -1 on failure
-    fn parse_vlan(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, stats_mgr : &mut stats_mgr::idsm_stats_mgr) -> i32 {
+    fn parse_vlan(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, stats_mgr : &mut stats_mgr::idsm_stats_mgr, debug : bool) -> i32 {
         let ret : i32;
 
-        ret = self.vh.deserialize(p, evt_mgr);
+        ret = self.vh.deserialize(p, evt_mgr, debug);
         if ret < 0 {
             return -1;
         }
@@ -184,7 +194,7 @@ impl pkt_parser {
                 ret = self.ah.deserialize(p, evt_mgr, debug);
                 stats_mgr.inc_arp_rx();
             }
-            Ethertypes::IEEE_8021Q      => ret = self.parse_vlan(p, evt_mgr, stats_mgr),
+            Ethertypes::IEEE_8021Q      => ret = self.parse_vlan(p, evt_mgr, stats_mgr, debug),
             _                           => ret = -1,
         }
 
@@ -213,8 +223,8 @@ impl pkt_parser {
 
         if Ethertypes::has_l3(ethertype) {
             match ethertype {
-                Ethertypes::IPV4 => ret = self.parse_ipv4(p, evt_mgr, stats_mgr),
-                Ethertypes::IPV6 => ret = self.parse_ipv6(p, evt_mgr, stats_mgr),
+                Ethertypes::IPV4 => ret = self.parse_ipv4(p, evt_mgr, stats_mgr, debug),
+                Ethertypes::IPV6 => ret = self.parse_ipv6(p, evt_mgr, stats_mgr, debug),
                 _ => ret = -1,
             }
         }

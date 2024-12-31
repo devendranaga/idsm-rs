@@ -1,5 +1,6 @@
 // @brief - describes the list of events found by the idsm
 // @copyright - Devendra Naga 2024-present all rights reserved
+#![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
 #[non_exhaustive]
@@ -21,6 +22,9 @@ impl event_desc {
     pub const TCP_SHORT_HDR_LEN         : u32 = 0x3000;
     pub const TCP_SRC_PORT_ZERO         : u32 = 0x3001;
     pub const TCP_DST_PORT_ZERO         : u32 = 0x3002;
+    pub const TCP_FLAGS_ALL_ZERO        : u32 = 0x3003;
+    pub const TCP_FLAGS_SYN_FIN_SET     : u32 = 0x3004;
+    pub const TCP_UNKNOWN_OPT           : u32 = 0x3005;
 
     // list of events related to VLAN
     pub const VLAN_ID_RESERVED          : u32 = 0x4000;
@@ -32,5 +36,7 @@ impl event_desc {
 
     pub const IPV6_SHORT_HDR_LEN        : u32 = 0x6000;
     pub const IPV6_INVAL_VERSION        : u32 = 0x6001;
+
+    pub const ICMP6_SHORT_HDR_LEN       : u32 = 0x7000;
     pub const NONE                      : u32 = 0xDEADBEEF;
 }

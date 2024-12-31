@@ -126,20 +126,20 @@ impl ipv4_hdr {
     //
     // @param [in] self - ipv4 header
     pub fn print(&self) {
-        println!("ipv4_hdr: ");
-        println!("\t version: {}", self.version);
-        println!("\t ihl: {}", self.ihl);
-        println!("\t dscp: {}", self.dscp);
-        println!("\t ech: {}", self.ecn);
-        println!("\t total_len: {}", self.total_len);
-        println!("\t id: 0x{:02X}", self.id);
-        println!("\t flags: ");
-        println!("\t\t reserved: {}", self.flags_res);
-        println!("\t\t df: {}", self.flags_df);
-        println!("\t\t mf: {}", self.flags_mf);
-        println!("\t ttl: {}", self.ttl);
-        println!("\t protocol: {}", self.protocol);
-        println!("\t hdr_checksum: 0x{:02X}", self.hdr_checksum);
+        log::info!("ipv4_hdr: ");
+        log::info!("\t version: {}", self.version);
+        log::info!("\t ihl: {}", self.ihl);
+        log::info!("\t dscp: {}", self.dscp);
+        log::info!("\t ech: {}", self.ecn);
+        log::info!("\t total_len: {}", self.total_len);
+        log::info!("\t id: 0x{:02X}", self.id);
+        log::info!("\t flags: ");
+        log::info!("\t\t reserved: {}", self.flags_res);
+        log::info!("\t\t df: {}", self.flags_df);
+        log::info!("\t\t mf: {}", self.flags_mf);
+        log::info!("\t ttl: {}", self.ttl);
+        log::info!("\t protocol: {}", self.protocol);
+        log::info!("\t hdr_checksum: 0x{:02X}", self.hdr_checksum);
         packet::print_ipv4("src_ipaddr", self.src_ipaddr);
         packet::print_ipv4("dst_ipaddr", self.dst_ipaddr);
     }

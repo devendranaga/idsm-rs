@@ -96,13 +96,13 @@ impl eth_hdr {
     //
     // @param [in] self - ethernet header
     pub fn print(&self) {
-        println!("eth_hdr:");
-        println!("\t dst_mac: {:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}",
+        log::info!("eth_hdr:");
+        log::info!("\t dst_mac: {:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}",
                                 self.dst_mac[0], self.dst_mac[1], self.dst_mac[2],
                                 self.dst_mac[3], self.dst_mac[4], self.dst_mac[5]);
-        println!("\t src_mac: {:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}",
+        log::info!("\t src_mac: {:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}:{:02X?}",
                                 self.src_mac[0], self.src_mac[1], self.src_mac[2],
                                 self.src_mac[3], self.src_mac[4], self.src_mac[5]);
-        println!("\t ethertype: {:04X?}", self.ethertype);
+        log::info!("\t ethertype: {:04X?}", self.ethertype);
     }
 }

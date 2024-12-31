@@ -126,12 +126,12 @@ impl arp_hdr {
     //
     // @param [in] self - ARP header
     pub fn print(&mut self) {
-        println!("arp_hdr: ");
-        println!("\t hdr_type: {}", self.hdr_type);
-        println!("\t protocol_type: {}", self.protocol_type);
-        println!("\t hw_addr_len: {}", self.hw_addr_len);
-        println!("\t protocol_len: {}", self.protocol_len);
-        println!("\t op: {}", self.op);
+        log::info!("arp_hdr: ");
+        log::info!("\t hdr_type: {}", self.hdr_type);
+        log::info!("\t protocol_type: {}", self.protocol_type);
+        log::info!("\t hw_addr_len: {}", self.hw_addr_len);
+        log::info!("\t protocol_len: {}", self.protocol_len);
+        log::info!("\t op: {}", self.op);
         packet::print_macaddr("sender_hw_addr", &self.sender_hw_addr);
         packet::print_ipv4("sender_protocol_addr", self.sender_proto_addr);
         packet::print_macaddr("target_hw_addr", &self.target_hw_addr);

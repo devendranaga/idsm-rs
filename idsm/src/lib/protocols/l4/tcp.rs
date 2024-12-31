@@ -115,17 +115,17 @@ impl tcp_flags {
     //
     // @param [in] self - TCP flags
     pub fn print(&self) {
-        println!("\t flags: ");
-        println!("\t\t res: {}", self.res);
-        println!("\t\t accurate_ecn: {}", self.accurate_ecn);
-        println!("\t\t cwr: {}", self.cwr);
-        println!("\t\t ece: {}", self.ece);
-        println!("\t\t urg: {}", self.urg);
-        println!("\t\t ack: {}", self.ack);
-        println!("\t\t psh: {}", self.psh);
-        println!("\t\t rst: {}", self.rst);
-        println!("\t\t syn: {}", self.syn);
-        println!("\t\t fin: {}", self.fin);
+        log::info!("\t flags: ");
+        log::info!("\t\t res: {}", self.res);
+        log::info!("\t\t accurate_ecn: {}", self.accurate_ecn);
+        log::info!("\t\t cwr: {}", self.cwr);
+        log::info!("\t\t ece: {}", self.ece);
+        log::info!("\t\t urg: {}", self.urg);
+        log::info!("\t\t ack: {}", self.ack);
+        log::info!("\t\t psh: {}", self.psh);
+        log::info!("\t\t rst: {}", self.rst);
+        log::info!("\t\t syn: {}", self.syn);
+        log::info!("\t\t fin: {}", self.fin);
     }
 }
 
@@ -174,10 +174,10 @@ impl tcp_opt_timestamp {
     //
     // @param [in] self - TCP timestamp
     pub fn print(&self) {
-        println!("\t\t opt_timestamp: ");
-        println!("\t\t\t len: {}", self.len);
-        println!("\t\t\t ts_val: {}", self.ts_val);
-        println!("\t\t\t ts_echo_reply: {}", self.ts_echo_reply);
+        log::info!("\t\t opt_timestamp: ");
+        log::info!("\t\t\t len: {}", self.len);
+        log::info!("\t\t\t ts_val: {}", self.ts_val);
+        log::info!("\t\t\t ts_echo_reply: {}", self.ts_echo_reply);
     }
 }
 
@@ -343,17 +343,17 @@ impl tcp_hdr {
     //
     // @param [in] self - this structure
     pub fn print(&self) {
-        println!("tcp_hdr: ");
-        println!("\t src_port : {}", self.src_port);
-        println!("\t dst_port : {}", self.dst_port);
-        println!("\t seq_no : {}", self.seq_no);
-        println!("\t ack_no : {}", self.ack_no);
-        println!("\t hdr_len : {}", self.hdr_len);
+        log::info!("tcp_hdr: ");
+        log::info!("\t src_port : {}", self.src_port);
+        log::info!("\t dst_port : {}", self.dst_port);
+        log::info!("\t seq_no : {}", self.seq_no);
+        log::info!("\t ack_no : {}", self.ack_no);
+        log::info!("\t hdr_len : {}", self.hdr_len);
         self.flags.print();
 
-        println!("\t window : {}", self.window);
-        println!("\t hdr_checksum : 0x{:02X}", self.hdr_checksum);
-        println!("\t urg_ptr: {}", self.urg_ptr);
+        log::info!("\t window : {}", self.window);
+        log::info!("\t hdr_checksum : 0x{:02X}", self.hdr_checksum);
+        log::info!("\t urg_ptr: {}", self.urg_ptr);
         self.options.print();
     }
 }

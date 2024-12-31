@@ -10,6 +10,8 @@ mod core;
 mod stats;
 
 fn main() {
+    env_logger::init();
+
     let mut ctx : core::idsm_context::idsm_context = core::idsm_context::idsm_context::new();
     let ret : i32;
 

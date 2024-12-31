@@ -27,7 +27,7 @@ impl idsm_cmd_args {
     // @param [in] self - struct idsm_cmd_args
     // @param [in] progname - program name
     fn usage(&mut self, progname : &String) {
-        println!("{} \n\
+        log::info!("{} \n\
                  \t -f / --filename <firewall config file>\n \
                  \t -d / --debug <print debug messages during protocol parsing\n \
                  \t -h / -help <show this help>", progname);

@@ -133,23 +133,23 @@ impl packet {
     }
 
     pub fn hexdump(&mut self) {
-        println!("packet: len {}", self.pkt_len);
+        log::info!("packet: len {}", self.pkt_len);
         for i in 0..self.pkt_len {
             if i != 0 {
                 if i % 8 == 0 {
                     print!("    ");
                 }
                 if i % 16 == 0 {
-                    println!("");
+                    log::info!("");
                 }
             }
             print!("{:02X} ", self.buf[i]);
         }
-        println!("");
+        log::info!("");
     }
 
     pub fn print_ipv4(name : &str, addr : u32) {
-        println!("{}: {}.{}.{}.{}",
+        log::info!("{}: {}.{}.{}.{}",
                 name,
                 (addr & 0xFF000000) >> 24,
                 (addr & 0x00FF0000) >> 16,
@@ -158,7 +158,7 @@ impl packet {
     }
 
     pub fn print_macaddr(name : &str, mac_addr : &[u8]) {
-        println!("{}: {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+        log::info!("{}: {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
                 name,
                 mac_addr[0], mac_addr[1],
                 mac_addr[2], mac_addr[3],
@@ -166,7 +166,7 @@ impl packet {
     }
 
     pub fn print_ipv6(name : &str, addr : &[u8]) {
-        println!("{}: {:02X}{:02X}:{:02X}{:02X}:\
+        log::info!("{}: {:02X}{:02X}:{:02X}{:02X}:\
                       {:02X}{:02X}:{:02X}{:02X}:\
                       {:02X}{:02X}:{:02X}{:02X}:\
                       {:02X}{:02X}:{:02X}{:02X}",

@@ -25,7 +25,9 @@ pub struct idsm_context {
 
 impl idsm_context {
     // @brief - zero initialize idsm context
+    //
     // @return idsm context
+    #[inline(always)]
     pub fn new() -> idsm_context {
         let context = idsm_context {
             cmd_args                : idsm_cmd_args::new(),
@@ -37,6 +39,11 @@ impl idsm_context {
         context
     }
 
+    // @brief - initialize pcap writing
+    //
+    // @param [in] self - this structure
+    //
+    // @return 0 on success -1 on failure
     fn init_pcap_writing(&mut self) -> i32 {
         let mut pcap_filename = String::new();
         let mut ret = -1;
@@ -45,16 +52,18 @@ impl idsm_context {
         if self.config_data.pcap_config.enable {
             let file_prefix = ".pcap".to_string();
 
+            // make a filename with timestamp
             ret = gmtime_filename(&self.config_data.pcap_config.file_prefix,
                                 &file_prefix, &mut pcap_filename);
             if ret < 0 {
-                println!("cannot create a filename with current time");
+                log::error!("cannot create a filename with current time");
                 return -1;
             }
 
+            // create a pcap file
             ret = self.pcap_write.create(&pcap_filename);
             if ret < 0 {
-                println!("idsm: failed to create pcap file");
+                log::error!("idsm: failed to create pcap file");
                 return -1;
             }
         }
@@ -63,14 +72,17 @@ impl idsm_context {
     }
 
     // @brief - initialize the idsm context
+    //
     // @param [in] self - idsm context
+    //
+    // @return 0 on success -1 on failure
     pub fn init(&mut self) -> i32 {
         let mut ret : i32;
 
         // parse command line arguments
         ret = self.cmd_args.parse();
         if ret < 0 {
-            println!("idsm: failed to parse command line args");
+            log::error!("idsm: failed to parse command line args");
             return -1;
         }
 
@@ -78,17 +90,17 @@ impl idsm_context {
         // parse config file
         ret = self.config_data.parse(&self.cmd_args.config_file, config_dbg);
         if ret < 0 {
-            println!("idsm: failed to parse config data");
+            log::error!("idsm: failed to parse config data");
             return -1;
         }
 
         ret = self.init_pcap_writing();
         if ret < 0 {
-            println!("idsm: cannot create pcap context");
+            log::error!("idsm: cannot create pcap context");
             return -1;
         }
 
-        println!("idsm: init ok");
+        log::info!("idsm: init ok");
 
         return 0;
     }
@@ -102,7 +114,7 @@ impl idsm_context {
     fn process_raw_sock_recv(&mut self, raw_sock : &mut lib::raw::raw_socket::raw_socket) -> i32 {
         use crate::lib;
 
-        let mut ret : i32;
+        let ret : i32;
         let mut p : packet = packet::new();
         let rx_len = p.buf_len();
         let debug_protocols = is_debug_level_protocol(self.cmd_args.debug);
@@ -110,6 +122,7 @@ impl idsm_context {
         // read from the raw socket
         ret = lib::raw::raw_socket::raw_socket::read(raw_sock, &mut p.buf, rx_len);
         if ret < 0 {
+            log::error!("failed to read from raw socket");
             return -1;
         }
 
@@ -121,11 +134,9 @@ impl idsm_context {
         self.stats_mgr.inc_rx();
 
         // parse the incoming frame, store events if necessary
-        ret = parser.parse(&mut p, &mut self.evt_mgr, &mut self.stats_mgr, debug_protocols);
-        if ret < 0 {
-            return -1;
-        }
+        _ = parser.parse(&mut p, &mut self.evt_mgr, &mut self.stats_mgr, debug_protocols);
 
+        // write to pcap log
         if self.config_data.pcap_config.enable {
             self.pcap_write.write(&p.buf, p.pkt_len as u32);
         }
@@ -158,7 +169,7 @@ impl idsm_context {
         // create raw socket
         ret = lib::raw::raw_socket::raw_socket::create(&mut raw_sock, &self.config_data.ifname);
         if ret != 0 {
-            println!("idsm: cannot create raw socket!");
+            log::error!("idsm: cannot create raw socket!");
             return;
         }
 
@@ -178,8 +189,7 @@ impl idsm_context {
             if select_res.res == 0 {
                 if select_res.fd == raw_sock.get() {
                     _ = self.process_raw_sock_recv(&mut raw_sock);
-                }
-                if select_res.id == evt_timeval.id {
+                } else if select_res.id == evt_timeval.id {
                     self.process_evt_upload();
                 }
             }

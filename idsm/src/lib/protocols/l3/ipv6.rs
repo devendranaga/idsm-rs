@@ -117,13 +117,13 @@ impl ipv6_hdr {
     //
     // @param [in] self - ipv6 packet
     pub fn print(&self) {
-        println!("ipv6_hdr: ");
-        println!("\t version: {}", self.version);
-        println!("\t traffic_class: {}", self.traffic_class);
-        println!("\t flow_label: {}", self.flow_lable);
-        println!("\t payload_len: {}", self.payload_len);
-        println!("\t next_hdr: {}", self.next_hdr);
-        println!("\t hop_limit: {}", self.hop_limit);
+        log::info!("ipv6_hdr: ");
+        log::info!("\t version: {}", self.version);
+        log::info!("\t traffic_class: {}", self.traffic_class);
+        log::info!("\t flow_label: {}", self.flow_lable);
+        log::info!("\t payload_len: {}", self.payload_len);
+        log::info!("\t next_hdr: {}", self.next_hdr);
+        log::info!("\t hop_limit: {}", self.hop_limit);
         packet::print_ipv6("src_ip6addr: ", &self.src_ip6addr);
         packet::print_ipv6("dst_ip6addr: ", &self.dst_ip6addr);
     }

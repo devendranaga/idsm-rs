@@ -67,7 +67,6 @@ impl idsm_cmd_args {
         if matches.opt_present("d") {
             let debug_str = matches.opt_str("d").unwrap().to_string();
             self.debug = debug_str.parse().unwrap();
-            println!("debug {}", self.debug);
         }
 
         return 0;

@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
 use super::timestamp::{get_wallclock, timestamp};

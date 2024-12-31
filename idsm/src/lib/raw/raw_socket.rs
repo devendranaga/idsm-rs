@@ -22,6 +22,8 @@ impl raw_socket {
         return r;
     }
 
+    pub fn get(&mut self) -> i32 { return self.fd; }
+
     pub fn create(r : &mut raw_socket, ifname : &String) -> i32 {
         let mut ret;
 

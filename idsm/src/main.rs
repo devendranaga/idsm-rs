@@ -11,7 +11,7 @@ mod stats;
 
 fn main() {
     let mut ctx : core::idsm_context::idsm_context = core::idsm_context::idsm_context::new();
-    let mut ret : i32 = -1;
+    let ret : i32;
 
     ret = ctx.init();
     if ret < 0 {

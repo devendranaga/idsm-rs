@@ -1,2 +1,2 @@
 pub(crate) mod c_strcpy;
-pub(crate) mod memcmp;
+pub(crate) mod c_memcmp;

@@ -164,4 +164,16 @@ impl packet {
                 mac_addr[2], mac_addr[3],
                 mac_addr[4], mac_addr[5]);
     }
+
+    pub fn print_ipv6(name : &str, addr : &[u8]) {
+        println!("{}: {:02X}{:02X}:{:02X}{:02X}:\
+                      {:02X}{:02X}:{:02X}{:02X}:\
+                      {:02X}{:02X}:{:02X}{:02X}:\
+                      {:02X}{:02X}:{:02X}{:02X}",
+                      name,
+                      addr[0], addr[1], addr[2], addr[3],
+                      addr[4], addr[5], addr[6], addr[7],
+                      addr[8], addr[9], addr[10], addr[11],
+                      addr[12], addr[13], addr[14], addr[15]);
+    }
 }

@@ -30,9 +30,9 @@ impl idsm_pcap_config {
     }
 
     pub fn print(&self) {
-        println!("pcap_config: ");
-        println!("\t enable: {}", self.enable);
-        println!("\t file_prefix: {}", self.file_prefix);
+        log::info!("pcap_config: ");
+        log::info!("\t enable: {}", self.enable);
+        log::info!("\t file_prefix: {}", self.file_prefix);
     }
 }
 
@@ -67,10 +67,10 @@ impl idsm_event_transport_udp {
     }
 
     pub fn print(&self) {
-        println!("udp_config: ");
-        println!("\t ipaddr: {}", self.ipaddr);
-        println!("\t port: {}", self.port);
-        println!("\t interval_sec: {}", self.interval_sec);
+        log::info!("udp_config: ");
+        log::info!("\t ipaddr: {}", self.ipaddr);
+        log::info!("\t port: {}", self.port);
+        log::info!("\t interval_sec: {}", self.interval_sec);
     }
 }
 
@@ -117,9 +117,9 @@ impl idsm_events_config {
     }
 
     pub fn print(&self) {
-        println!("event_config: ");
-        println!("\t enable: {}", self.enable);
-        println!("\t evt_transport_type: {}", self.evt_transport_type);
+        log::info!("event_config: ");
+        log::info!("\t enable: {}", self.enable);
+        log::info!("\t evt_transport_type: {}", self.evt_transport_type);
         self.udp_config.print();
     }
 }
@@ -164,8 +164,8 @@ impl idsm_config {
     }
 
     pub fn print(&self) {
-        println!("idsm config data: ");
-        println!("ifname: {}", self.ifname);
+        log::info!("idsm config data: ");
+        log::info!("ifname: {}", self.ifname);
         self.pcap_config.print();
         self.evt_config.print();
     }

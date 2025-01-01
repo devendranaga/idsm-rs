@@ -2,19 +2,20 @@
 #![allow(non_camel_case_types)]
 
 pub struct packet {
-    pub buf : [u8; 2048],
-    buf_len : usize,
-    pub pkt_len : usize,
-    pub off : usize
+    pub buf             : [u8; 2048],
+    buf_len             : usize,
+    pub pkt_len         : usize,
+    pub off             : usize
 }
 
 impl packet {
+    #[inline(always)]
     pub fn new() -> packet {
         let p = packet {
-            buf : [0; 2048],
-            buf_len : 2048,
-            pkt_len : 0,
-            off : 0
+            buf             : [0; 2048],
+            buf_len         : 2048,
+            pkt_len         : 0,
+            off             : 0
         };
         p
     }
@@ -28,9 +29,7 @@ impl packet {
         return (self.pkt_len as u32 - self.off as u32) >= hdr_len;
     }
 
-    pub fn buf_len(&self) -> usize {
-        return self.buf_len;
-    }
+    pub fn buf_len(&self) -> usize { return self.buf_len; }
 
     fn packet_buf_panic(&mut self) {
         panic!("too short buffer length: offset: {}, buffer_len: {}",

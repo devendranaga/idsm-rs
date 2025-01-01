@@ -87,10 +87,10 @@ impl vlan_hdr {
     //
     // @param [in] self - vlan header
     pub fn print(&self) {
-        println!("vlan_hdr: ");
-        println!("\t pcp: {}", self.pcp);
-        println!("\t dei: {}", self.dei);
-        println!("\t vid: {}", self.vid);
-        println!("\t ethertype: {:02X}", self.ethertype);
+        log::info!("vlan_hdr: ");
+        log::info!("\t pcp: {}", self.pcp);
+        log::info!("\t dei: {}", self.dei);
+        log::info!("\t vid: {}", self.vid);
+        log::info!("\t ethertype: {:02X}", self.ethertype);
     }
 }

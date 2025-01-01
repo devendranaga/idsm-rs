@@ -208,23 +208,30 @@ impl tcp_opt {
     // @param [out] self - this struct
     // @param [inout] p - packet
     // @param [out] evt_mgr - event mgr
-    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
+    pub fn deserialize(&mut self, opt_len : u32, p : &mut packet, evt_mgr : &mut event_mgr) -> i32 {
         let mut ret : i32 = 0;
         let mut opt : u8;
+        let mut opt_off : u32 = 0;
 
         /* skip if no options present. */
-        while p.off < p.pkt_len {
+        while (opt_off < opt_len) && (p.off < p.pkt_len) {
             opt = p.buf[p.off];
 
             if opt == tcp_opt::OPT_NO_OP {
                 p.off += 1;
+
+                opt_off += 1;
                 self.available_options |= tcp_opt::OPT_NO_OP as u32;
             } else if opt == tcp_opt::OPT_TIMESTAMP {
+                p.off += 1;
+                opt_off += 1;
+
                 ret = self.opt_timestamp.deserialize(p, evt_mgr);
                 if ret != 0 {
                     return -1;
                 }
                 self.available_options |= tcp_opt::OPT_TIMESTAMP as u32;
+                opt_off += 9;
             } else {
                 // unknown option
                 evt_mgr.insert_evt_info(
@@ -329,9 +336,12 @@ impl tcp_hdr {
         p.deserialize_2_bytes(&mut self.hdr_checksum);
         p.deserialize_2_bytes(&mut self.urg_ptr);
 
-        ret = self.options.deserialize(p, evt_mgr);
-        if ret < 0 {
-            return -1;
+        let opt_len = (self.hdr_len * 4) as u32 - tcp_hdr::TCP_MIN_HDR_LEN;
+        if opt_len > 0 {
+            ret = self.options.deserialize(opt_len, p, evt_mgr);
+            if ret < 0 {
+                return -1;
+            }
         }
 
         if debug { self.print(); }

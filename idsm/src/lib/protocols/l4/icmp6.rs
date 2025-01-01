@@ -1,7 +1,14 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
-use crate::{events::{event_desc::event_desc, event_mgr::event_mgr, event_type::event_type}, lib::protocols::packet::packet::packet};
+use crate::{
+    events::{
+        event_desc::event_desc,
+        event_mgr::event_mgr,
+        event_type::event_type
+    },
+    lib::protocols::packet::packet::packet
+};
 
 #[non_exhaustive]
 pub struct icmp6_types;
@@ -56,10 +63,54 @@ impl icmp6_parameter_problem {
     pub const UNRECOG_IPV6_OPT : u32 = 2;
 }
 
+pub struct icmp6_dest_unreachable {
+    pub unused : u8,
+    pub length : u8,
+    pub next_hop_mtu : u16
+}
+
+impl icmp6_dest_unreachable {
+    pub const DEST_UNREACHABLE_LEN : u32 = 4;
+
+    #[inline(always)]
+    pub fn new() -> icmp6_dest_unreachable {
+        let d = icmp6_dest_unreachable {
+            unused : 0,
+            length : 0,
+            next_hop_mtu : 0
+        };
+        d
+    }
+
+    pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, debug : bool) -> i32 {
+        if p.remaining_len_in_bounds(icmp6_dest_unreachable::DEST_UNREACHABLE_LEN) == false {
+            evt_mgr.insert_evt_info(event_type::EVENT_TYPE_DENY,
+                                    event_desc::ICMP6_SHORT_DEST_UNREACH_HDR_LEN);
+            return -1;
+        }
+
+        p.deserialize_byte(&mut self.unused);
+        p.deserialize_byte(&mut self.length);
+        p.deserialize_2_bytes(&mut self.next_hop_mtu);
+
+        if debug { self.print(); }
+
+        return 0;
+    }
+
+    pub fn print(&self) {
+        log::info!("\t destination_unreachable: ");
+        log::info!("\t\t unused: {}", self.unused);
+        log::info!("\t\t length: {}", self.length);
+        log::info!("\t\t next_hop_mtu: {}", self.next_hop_mtu);
+    }
+}
+
 pub struct icmp6_hdr {
-    icmp6_type : u8,
-    code : u8,
-    checksum : u16
+    icmp6_type          : u8,
+    code                : u8,
+    checksum            : u16,
+    dest_unreach        : icmp6_dest_unreachable
 }
 
 impl icmp6_hdr {
@@ -68,14 +119,17 @@ impl icmp6_hdr {
     #[inline(always)]
     pub fn new() -> icmp6_hdr {
         let icmp6_h = icmp6_hdr {
-            icmp6_type : 0,
-            code : 0,
-            checksum : 0
+            icmp6_type          : 0,
+            code                : 0,
+            checksum            : 0,
+            dest_unreach        : icmp6_dest_unreachable::new()
         };
         icmp6_h
     }
 
     pub fn deserialize(&mut self, p : &mut packet, evt_mgr : &mut event_mgr, debug : bool) -> i32 {
+        let ret : i32;
+
         if p.remaining_len_in_bounds(icmp6_hdr::ICMP6_MIN_HDR_LEN) {
             evt_mgr.insert_evt_info(
                                     event_type::EVENT_TYPE_DENY,
@@ -87,12 +141,25 @@ impl icmp6_hdr {
         p.deserialize_byte(&mut self.code);
         p.deserialize_2_bytes(&mut self.checksum);
 
+        match self.icmp6_type {
+            icmp6_types::DEST_UNREACHABLE => ret = self.dest_unreach.deserialize(p, evt_mgr, debug),
+            _ => ret = -1,
+        }
+
+        if ret < 0 {
+            return ret;
+        }
+
         if debug { self.print(); }
 
         return 0;
     }
 
     pub fn print(&self) {
-        println!("icmp6_hdr: ");
+        log::info!("icmp6_hdr: ");
+        match self.icmp6_type {
+            icmp6_types::DEST_UNREACHABLE => self.dest_unreach.print(),
+            _ => (),
+        }
     }
 }

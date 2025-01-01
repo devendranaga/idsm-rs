@@ -27,7 +27,7 @@ impl pktgen_cmd_args {
     // @param [in] self - struct idsm_cmd_args
     // @param [in] progname - program name
     fn usage(&mut self, progname : &String) {
-        println!("{} \n\
+        log::info!("{} \n\
                  \t -f / --filename <firewall config file>\n \
                  \t -d / --debug <print debug messages during protocol parsing\n \
                  \t -h / -help <show this help>", progname);
@@ -67,7 +67,7 @@ impl pktgen_cmd_args {
         if matches.opt_present("d") {
             let debug_str = matches.opt_str("d").unwrap().to_string();
             self.debug = debug_str.parse().unwrap();
-            println!("debug {}", self.debug);
+            log::info!("debug {}", self.debug);
         }
 
         return 0;
